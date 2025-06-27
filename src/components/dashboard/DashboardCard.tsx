@@ -1,5 +1,5 @@
 import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import { DivideIcon as LucideIcon } from 'lucide-react';
 import { Card } from '../ui/Card';
 
 interface DashboardCardProps {
