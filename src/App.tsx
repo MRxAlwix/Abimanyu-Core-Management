@@ -1,14 +1,20 @@
 import React, { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from './hooks/useTheme';
+import { AuthProvider, useAuth } from './components/auth/AuthProvider';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
+import { LoginForm } from './components/auth/LoginForm';
 import { notificationService } from './services/notificationService';
 import { backupService } from './services/backupService';
 import { dataService } from './services/dataService';
 
-function App() {
+function AppContent() {
+  const { isAuthenticated } = useAuth();
+
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     // Initialize application
     const initializeApp = async () => {
       try {
@@ -41,12 +47,7 @@ function App() {
     };
 
     initializeApp();
-
-    // Cleanup function
-    return () => {
-      // Any cleanup logic would go here
-    };
-  }, []);
+  }, [isAuthenticated]);
 
   // Global error handler for unhandled promise rejections
   useEffect(() => {
@@ -70,22 +71,34 @@ function App() {
     };
   }, []);
 
+  if (!isAuthenticated) {
+    return <LoginForm />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+      <Layout />
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: 'var(--toast-bg)',
+            color: 'var(--toast-color)',
+          },
+        }}
+      />
+    </div>
+  );
+}
+
+function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-          <Layout />
-          <Toaster 
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: 'var(--toast-bg)',
-                color: 'var(--toast-color)',
-              },
-            }}
-          />
-        </div>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

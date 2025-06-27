@@ -9,6 +9,8 @@ import { ProjectSystem } from '../projects/ProjectSystem';
 import { MaterialSystem } from '../materials/MaterialSystem';
 import { AttendanceSystem } from '../attendance/AttendanceSystem';
 import { WeeklyReportSystem } from '../reports/WeeklyReport';
+import { SettingsPage } from '../settings/SettingsPage';
+import { PremiumFeatures } from '../premium/PremiumFeatures';
 
 export function Layout() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -32,6 +34,10 @@ export function Layout() {
         return <AttendanceSystem />;
       case 'reports':
         return <WeeklyReportSystem />;
+      case 'premium':
+        return <PremiumFeatures />;
+      case 'settings':
+        return <SettingsPage />;
       case 'analytics':
         return (
           <div className="text-center py-12">
