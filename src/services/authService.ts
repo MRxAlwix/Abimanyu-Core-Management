@@ -10,6 +10,7 @@ export interface User {
   role: string;
   createdAt: string;
   lastLogin: string;
+  profileImage?: string;
 }
 
 export interface AuthState {
@@ -52,23 +53,23 @@ class AuthService {
 
           // Store encrypted auth data
           const encryptedAuth = this.encryptData(JSON.stringify(authState));
-          localStorage.setItem(STORAGE_KEYS.AUTH, encryptedAuth);
+          localStorage.setItem('abimanyu_auth', encryptedAuth);
 
           resolve(authState);
         } else {
-          reject(new Error('Invalid credentials'));
+          reject(new Error('Username atau password salah'));
         }
       }, 1000);
     });
   }
 
   logout(): void {
-    localStorage.removeItem(STORAGE_KEYS.AUTH);
+    localStorage.removeItem('abimanyu_auth');
   }
 
   getCurrentUser(): AuthState | null {
     try {
-      const encryptedAuth = localStorage.getItem(STORAGE_KEYS.AUTH);
+      const encryptedAuth = localStorage.getItem('abimanyu_auth');
       if (!encryptedAuth) return null;
 
       const decryptedAuth = this.decryptData(encryptedAuth);

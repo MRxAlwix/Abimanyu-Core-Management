@@ -64,7 +64,10 @@ export function Layout() {
       />
       
       <div className="flex-1 flex flex-col">
-        <Header onMenuToggle={() => setIsSidebarOpen(true)} />
+        <Header 
+          onMenuToggle={() => setIsSidebarOpen(true)}
+          onNavigate={setActiveTab}
+        />
         
         <main className="flex-1 p-6 overflow-auto">
           {renderContent()}

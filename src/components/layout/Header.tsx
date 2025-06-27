@@ -1,15 +1,15 @@
 import React from 'react';
-import { Menu, Bell, User } from 'lucide-react';
+import { Menu, Bell } from 'lucide-react';
 import { ThemeToggle } from '../ui/ThemeToggle';
-import { useAuth } from '../auth/AuthProvider';
+import { ProfileDropdown } from '../ui/ProfileDropdown';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 
 interface HeaderProps {
   onMenuToggle: () => void;
+  onNavigate: (page: string) => void;
 }
 
-export function Header({ onMenuToggle }: HeaderProps) {
-  const { user, logout } = useAuth();
+export function Header({ onMenuToggle, onNavigate }: HeaderProps) {
   const [premiumStatus] = useLocalStorage('premium_status', { isPremium: false });
 
   const isPremiumActive = premiumStatus.isPremium && 
@@ -45,22 +45,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
           <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
         </button>
         
-        <div className="flex items-center space-x-2">
-          <div className="hidden sm:block text-right">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
-              {user?.username}
-            </p>
-            <p className="text-xs text-gray-600 dark:text-gray-400 capitalize">
-              {user?.role}
-            </p>
-          </div>
-          <button 
-            onClick={logout}
-            className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <User className="w-5 h-5" />
-          </button>
-        </div>
+        <ProfileDropdown onNavigate={onNavigate} />
       </div>
     </header>
   );
