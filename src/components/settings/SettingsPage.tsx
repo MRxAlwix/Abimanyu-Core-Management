@@ -1,20 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  Settings, 
-  Moon, 
-  Sun, 
-  Globe, 
-  Bell, 
-  Download, 
-  Sync, 
-  Monitor,
-  Info,
-  User,
-  Shield,
-  Palette,
-  Database,
-  RefreshCw
-} from 'lucide-react';
+import { Settings, Moon, Sun, Globe, Bell, Download, FolderSync as Sync, Monitor, Info, User, Shield, Palette, Database, RefreshCw } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
