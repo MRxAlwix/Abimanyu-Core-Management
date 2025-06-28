@@ -2,19 +2,18 @@ import React from 'react';
 import { Crown, Zap } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { actionLimitService } from '../../services/actionLimitService';
+import { useActionLimit } from '../../hooks/useActionLimit';
 
 export function ActionLimitIndicator() {
   const { user } = useAuth();
   const [premiumStatus] = useLocalStorage('premium_status', { isPremium: false });
+  const { actionStatus } = useActionLimit();
   
   if (!user) return null;
   
   const isPremiumActive = premiumStatus.isPremium && 
     premiumStatus.premiumUntil && 
     new Date(premiumStatus.premiumUntil) > new Date();
-  
-  const actionStatus = actionLimitService.getActionStatus(user.id, isPremiumActive);
   
   const getColorClass = () => {
     if (actionStatus.percentage >= 90) return 'text-red-600 dark:text-red-400';

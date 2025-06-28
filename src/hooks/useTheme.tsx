@@ -22,13 +22,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem('abimanyu_theme', theme);
     const root = document.documentElement;
+    const body = document.body;
     
     if (theme === 'dark') {
       root.classList.add('dark');
-      document.body.classList.add('dark');
+      body.classList.add('dark');
+      // Force update all components
+      document.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: 'dark' } }));
     } else {
       root.classList.remove('dark');
-      document.body.classList.remove('dark');
+      body.classList.remove('dark');
+      // Force update all components
+      document.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: 'light' } }));
     }
   }, [theme]);
 

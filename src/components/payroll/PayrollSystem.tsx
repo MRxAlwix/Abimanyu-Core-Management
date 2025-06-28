@@ -9,15 +9,13 @@ import { PayrollForm } from './PayrollForm';
 import { PayrollTable } from './PayrollTable';
 import { Worker, PayrollRecord } from '../../types';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useActionLimit } from '../../hooks/useActionLimit';
 import { exportToCSV, formatCurrency } from '../../utils/calculations';
 import { dataService } from '../../services/dataService';
 import { notificationService } from '../../services/notificationService';
-import { actionLimitService } from '../../services/actionLimitService';
-import { useAuth } from '../auth/AuthProvider';
 
 export function PayrollSystem() {
-  const { user } = useAuth();
-  const [premiumStatus] = useLocalStorage('premium_status', { isPremium: false });
+  const { canPerformAction, performAction } = useActionLimit();
   const [workers, setWorkers] = useLocalStorage<Worker[]>('workers', []);
   const [payrollRecords, setPayrollRecords] = useLocalStorage<PayrollRecord[]>('payrollRecords', []);
   const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
@@ -36,12 +34,8 @@ export function PayrollSystem() {
     onConfirm: () => {},
   });
 
-  const isPremiumActive = premiumStatus.isPremium && 
-    premiumStatus.premiumUntil && 
-    new Date(premiumStatus.premiumUntil) > new Date();
-
   const handleAddWorker = (workerData: Omit<Worker, 'id'>) => {
-    if (!user || !actionLimitService.canPerformAction(user.id, isPremiumActive)) {
+    if (!canPerformAction()) {
       return;
     }
 
@@ -49,7 +43,7 @@ export function PayrollSystem() {
       const newWorker = dataService.createWorker(workerData);
       setWorkers(prev => [...prev, newWorker]);
       setIsWorkerModalOpen(false);
-      actionLimitService.performAction(user.id, isPremiumActive, 'add_worker');
+      performAction('add_worker');
       notificationService.success(`Tukang ${newWorker.name} berhasil ditambahkan`);
     } catch (error: any) {
       notificationService.error(error.message || 'Gagal menambahkan tukang');
@@ -57,7 +51,7 @@ export function PayrollSystem() {
   };
 
   const handleAddPayroll = (payrollRecord: PayrollRecord) => {
-    if (!user || !actionLimitService.canPerformAction(user.id, isPremiumActive)) {
+    if (!canPerformAction()) {
       return;
     }
 
@@ -76,32 +70,30 @@ export function PayrollSystem() {
             prev.map(p => p.id === existingPayroll.id ? payrollRecord : p)
           );
           setIsPayrollModalOpen(false);
-          actionLimitService.performAction(user.id, isPremiumActive, 'update_payroll');
+          performAction('update_payroll');
           notificationService.success('Gaji berhasil diperbarui');
         },
       });
     } else {
       setPayrollRecords(prev => [...prev, payrollRecord]);
       setIsPayrollModalOpen(false);
-      actionLimitService.performAction(user.id, isPremiumActive, 'add_payroll');
+      performAction('add_payroll');
       notificationService.success(`Gaji ${payrollRecord.workerName} berhasil dihitung`);
     }
   };
 
   const handlePayrollAction = (action: string, recordId?: string) => {
-    if (!user) return;
-
     switch (action) {
       case 'export':
         if (payrollRecords.length === 0) {
           notificationService.warning('Tidak ada data gaji untuk diekspor');
           return;
         }
-        if (!actionLimitService.canPerformAction(user.id, isPremiumActive)) {
+        if (!canPerformAction()) {
           return;
         }
         exportToCSV(payrollRecords, 'payroll-records');
-        actionLimitService.performAction(user.id, isPremiumActive, 'export_data');
+        performAction('export_data');
         notificationService.success('Data gaji berhasil diekspor');
         break;
         
@@ -112,12 +104,13 @@ export function PayrollSystem() {
             title: 'Konfirmasi Pembayaran',
             message: 'Apakah yakin ingin menandai gaji ini sebagai sudah dibayar?',
             onConfirm: () => {
+              if (!canPerformAction()) return;
               setPayrollRecords(prev => prev.map(record => 
                 record.id === recordId 
                   ? { ...record, status: 'paid' as const, paidAt: new Date().toISOString() }
                   : record
               ));
-              actionLimitService.performAction(user.id, isPremiumActive, 'update_payroll');
+              performAction('update_payroll');
               notificationService.success('Status gaji berhasil diperbarui');
             },
           });
@@ -132,8 +125,9 @@ export function PayrollSystem() {
             title: 'Hapus Catatan Gaji',
             message: `Apakah yakin ingin menghapus catatan gaji ${record?.workerName}?`,
             onConfirm: () => {
+              if (!canPerformAction()) return;
               setPayrollRecords(prev => prev.filter(r => r.id !== recordId));
-              actionLimitService.performAction(user.id, isPremiumActive, 'delete_payroll');
+              performAction('delete_payroll');
               notificationService.success('Catatan gaji berhasil dihapus');
             },
           });
