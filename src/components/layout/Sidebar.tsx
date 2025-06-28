@@ -12,7 +12,8 @@ import {
   QrCode,
   Calendar,
   Settings,
-  Crown
+  Crown,
+  UserCog
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
@@ -27,6 +28,7 @@ interface SidebarProps {
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home },
+  { id: 'workers', label: 'Manajemen Tukang', icon: UserCog },
   { id: 'payroll', label: 'Sistem Gaji', icon: Users },
   { id: 'cashflow', label: 'Kas Masuk/Keluar', icon: DollarSign },
   { id: 'overtime', label: 'Hitungan Lembur', icon: Clock },

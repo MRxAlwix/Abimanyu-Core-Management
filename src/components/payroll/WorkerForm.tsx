@@ -4,26 +4,29 @@ import { FormValidation } from '../common/FormValidation';
 import { Worker } from '../../types';
 import { validateWorker } from '../../utils/validation';
 import { notificationService } from '../../services/notificationService';
+import { soundService } from '../../services/soundService';
 
 interface WorkerFormProps {
   onSubmit: (worker: Omit<Worker, 'id'>) => void;
   onCancel?: () => void;
+  initialData?: Worker;
 }
 
-export function WorkerForm({ onSubmit, onCancel }: WorkerFormProps) {
+export function WorkerForm({ onSubmit, onCancel, initialData }: WorkerFormProps) {
   const [formData, setFormData] = useState({
-    name: '',
-    dailyRate: 0,
-    position: '',
-    joinDate: new Date().toISOString().split('T')[0],
-    isActive: true,
-    phone: '',
-    address: '',
-    skills: [] as string[],
+    name: initialData?.name || '',
+    dailyRate: initialData?.dailyRate || 0,
+    position: initialData?.position || '',
+    joinDate: initialData?.joinDate || new Date().toISOString().split('T')[0],
+    isActive: initialData?.isActive ?? true,
+    phone: initialData?.phone || '',
+    address: initialData?.address || '',
+    skills: initialData?.skills || [] as string[],
   });
   
   const [errors, setErrors] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newSkill, setNewSkill] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +39,7 @@ export function WorkerForm({ onSubmit, onCancel }: WorkerFormProps) {
       const errorMessages = validation.errors?.map(err => err.message || 'Validation error') || [];
       setErrors(errorMessages);
       setIsSubmitting(false);
+      soundService.playSound('error');
       notificationService.error('Mohon perbaiki kesalahan pada form');
       return;
     }
@@ -58,25 +62,30 @@ export function WorkerForm({ onSubmit, onCancel }: WorkerFormProps) {
     if (additionalErrors.length > 0) {
       setErrors(additionalErrors);
       setIsSubmitting(false);
+      soundService.playSound('error');
       notificationService.error('Mohon lengkapi semua field yang wajib');
       return;
     }
 
     try {
       onSubmit(formData);
-      // Reset form
-      setFormData({
-        name: '',
-        dailyRate: 0,
-        position: '',
-        joinDate: new Date().toISOString().split('T')[0],
-        isActive: true,
-        phone: '',
-        address: '',
-        skills: [],
-      });
+      soundService.playSound('success');
+      // Reset form if not editing
+      if (!initialData) {
+        setFormData({
+          name: '',
+          dailyRate: 0,
+          position: '',
+          joinDate: new Date().toISOString().split('T')[0],
+          isActive: true,
+          phone: '',
+          address: '',
+          skills: [],
+        });
+      }
     } catch (error: any) {
       setErrors([error.message || 'Gagal menyimpan data tukang']);
+      soundService.playSound('error');
       notificationService.error('Gagal menyimpan data tukang');
     } finally {
       setIsSubmitting(false);
@@ -96,6 +105,51 @@ export function WorkerForm({ onSubmit, onCancel }: WorkerFormProps) {
       setErrors([]);
     }
   };
+
+  const addSkill = () => {
+    if (newSkill.trim() && !formData.skills.includes(newSkill.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()]
+      }));
+      setNewSkill('');
+      soundService.playSound('click');
+    }
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      skills: prev.skills.filter(skill => skill !== skillToRemove)
+    }));
+    soundService.playSound('click');
+  };
+
+  const commonPositions = [
+    'Tukang Bangunan',
+    'Mandor',
+    'Tukang Kayu',
+    'Tukang Besi',
+    'Tukang Cat',
+    'Tukang Listrik',
+    'Tukang Pipa',
+    'Tukang Keramik',
+    'Helper',
+    'Operator Alat Berat'
+  ];
+
+  const commonSkills = [
+    'Bangunan',
+    'Renovasi',
+    'Kayu',
+    'Besi',
+    'Cat',
+    'Listrik',
+    'Pipa',
+    'Keramik',
+    'Atap',
+    'Pondasi'
+  ];
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -120,15 +174,28 @@ export function WorkerForm({ onSubmit, onCancel }: WorkerFormProps) {
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Posisi/Jabatan <span className="text-red-500">*</span>
         </label>
-        <input
-          type="text"
+        <select
           name="position"
           value={formData.position}
           onChange={handleChange}
           required
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          placeholder="Contoh: Tukang Bangunan, Mandor, dll"
-        />
+        >
+          <option value="">Pilih posisi</option>
+          {commonPositions.map(position => (
+            <option key={position} value={position}>{position}</option>
+          ))}
+        </select>
+        {formData.position && !commonPositions.includes(formData.position) && (
+          <input
+            type="text"
+            name="position"
+            value={formData.position}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white mt-2"
+            placeholder="Atau ketik posisi lain"
+          />
+        )}
       </div>
 
       <div>
@@ -191,6 +258,61 @@ export function WorkerForm({ onSubmit, onCancel }: WorkerFormProps) {
         />
       </div>
 
+      {/* Skills Management */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Keahlian
+        </label>
+        <div className="flex gap-2 mb-2">
+          <select
+            value={newSkill}
+            onChange={(e) => setNewSkill(e.target.value)}
+            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            <option value="">Pilih keahlian</option>
+            {commonSkills.filter(skill => !formData.skills.includes(skill)).map(skill => (
+              <option key={skill} value={skill}>{skill}</option>
+            ))}
+          </select>
+          <Button
+            type="button"
+            size="sm"
+            onClick={addSkill}
+            disabled={!newSkill.trim()}
+          >
+            Tambah
+          </Button>
+        </div>
+        <input
+          type="text"
+          value={newSkill}
+          onChange={(e) => setNewSkill(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          placeholder="Atau ketik keahlian baru"
+        />
+        
+        {formData.skills.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {formData.skills.map((skill, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 rounded-full text-xs"
+              >
+                {skill}
+                <button
+                  type="button"
+                  onClick={() => removeSkill(skill)}
+                  className="ml-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="flex items-center">
         <input
           type="checkbox"
@@ -221,7 +343,7 @@ export function WorkerForm({ onSubmit, onCancel }: WorkerFormProps) {
           className="flex-1"
           disabled={isSubmitting}
         >
-          {isSubmitting ? 'Menyimpan...' : 'Simpan Tukang'}
+          {isSubmitting ? 'Menyimpan...' : initialData ? 'Update Tukang' : 'Simpan Tukang'}
         </Button>
       </div>
     </form>

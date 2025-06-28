@@ -11,6 +11,7 @@ import { AttendanceSystem } from '../attendance/AttendanceSystem';
 import { WeeklyReportSystem } from '../reports/WeeklyReport';
 import { SettingsPage } from '../settings/SettingsPage';
 import { PremiumFeatures } from '../premium/PremiumFeatures';
+import { WorkerManagement } from '../workers/WorkerManagement';
 
 export function Layout() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -20,6 +21,8 @@ export function Layout() {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard />;
+      case 'workers':
+        return <WorkerManagement />;
       case 'payroll':
         return <PayrollSystem />;
       case 'cashflow':
