@@ -1,22 +1,5 @@
 import React from 'react';
-import { 
-  Home, 
-  Users, 
-  DollarSign, 
-  Clock, 
-  FileText, 
-  BarChart3,
-  X,
-  FolderOpen,
-  Package,
-  QrCode,
-  Calendar,
-  Settings,
-  Crown,
-  UserCog,
-  Calculator,
-  Gantt
-} from 'lucide-react';
+import { Home, Users, DollarSign, Clock, FileText, BarChart3, X, FolderOpen, Package, QrCode, Calendar, Settings, Crown, UserCog, Calculator, GanttChart as Gantt } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { ActionLimitIndicator } from '../premium/ActionLimitIndicator';
