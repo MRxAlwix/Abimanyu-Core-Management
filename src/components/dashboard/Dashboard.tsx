@@ -11,7 +11,11 @@ import {
   Calendar,
   MapPin,
   QrCode,
-  FileText
+  FileText,
+  Zap,
+  Target,
+  Award,
+  BarChart3
 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
@@ -20,7 +24,6 @@ import { formatCurrency, formatDate } from '../../utils/calculations';
 import { Worker, PayrollRecord, Transaction, OvertimeRecord, Project, Material, AttendanceRecord } from '../../types';
 
 export function Dashboard() {
-  // Get all data from localStorage
   const [workers] = useLocalStorage<Worker[]>('workers', []);
   const [payrollRecords] = useLocalStorage<PayrollRecord[]>('payrollRecords', []);
   const [transactions] = useLocalStorage<Transaction[]>('transactions', []);
@@ -29,24 +32,20 @@ export function Dashboard() {
   const [materials] = useLocalStorage<Material[]>('materials', []);
   const [attendanceRecords] = useLocalStorage<AttendanceRecord[]>('attendance', []);
 
-  // Calculate real-time statistics
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
     const currentMonth = new Date().toISOString().slice(0, 7);
     const currentWeek = getWeekRange(new Date());
 
-    // Worker statistics
     const totalWorkers = workers.length;
     const activeWorkers = workers.filter(w => w.isActive).length;
 
-    // Payroll statistics
     const monthlyPayroll = payrollRecords
       .filter(p => p.period === currentMonth && p.status === 'paid')
       .reduce((sum, p) => sum + p.totalPay, 0);
     
     const pendingPayrolls = payrollRecords.filter(p => p.status === 'pending').length;
 
-    // Cash flow statistics
     const completedTransactions = transactions.filter(t => t.status === 'completed');
     const totalIncome = completedTransactions
       .filter(t => t.type === 'income')
@@ -58,7 +57,6 @@ export function Dashboard() {
     
     const netCashFlow = totalIncome - totalExpenses;
 
-    // Monthly cash flow
     const monthlyIncome = completedTransactions
       .filter(t => t.type === 'income' && t.date.startsWith(currentMonth))
       .reduce((sum, t) => sum + t.amount, 0);
@@ -67,75 +65,64 @@ export function Dashboard() {
       .filter(t => t.type === 'expense' && t.date.startsWith(currentMonth))
       .reduce((sum, t) => sum + t.amount, 0);
 
-    // Overtime statistics
     const pendingOvertimes = overtimeRecords.filter(o => o.status === 'pending').length;
     const totalOvertimeHours = overtimeRecords
       .filter(o => o.date >= currentWeek.start && o.date <= currentWeek.end)
       .reduce((sum, o) => sum + o.hours, 0);
-    
-    const totalOvertimeAmount = overtimeRecords
-      .filter(o => o.status === 'approved')
-      .reduce((sum, o) => sum + o.total, 0);
 
-    // Project statistics
     const activeProjects = projects.filter(p => p.status === 'active').length;
     const completedProjects = projects.filter(p => p.status === 'completed').length;
     const totalProjectBudget = projects.reduce((sum, p) => sum + p.budget, 0);
     const totalProjectSpent = projects.reduce((sum, p) => sum + p.spent, 0);
 
-    // Material statistics
     const totalMaterials = materials.length;
     const lowStockMaterials = materials.filter(m => m.stock <= m.minStock).length;
     const totalMaterialValue = materials.reduce((sum, m) => sum + (m.stock * m.pricePerUnit), 0);
 
-    // Attendance statistics
     const todayAttendance = attendanceRecords.filter(a => a.date === today);
     const presentToday = todayAttendance.filter(a => a.status === 'present').length;
     const lateToday = todayAttendance.filter(a => a.status === 'late').length;
-    const weeklyAttendance = attendanceRecords.filter(a => 
-      a.date >= currentWeek.start && a.date <= currentWeek.end
-    ).length;
+
+    // Performance metrics
+    const avgProjectProgress = projects.length > 0 
+      ? projects.reduce((sum, p) => sum + p.progress, 0) / projects.length 
+      : 0;
+    
+    const productivityScore = Math.round(
+      (presentToday / Math.max(activeWorkers, 1)) * 100
+    );
+
+    const budgetUtilization = totalProjectBudget > 0 
+      ? (totalProjectSpent / totalProjectBudget) * 100 
+      : 0;
 
     return {
-      // Workers
       totalWorkers,
       activeWorkers,
-      
-      // Payroll
       monthlyPayroll,
       pendingPayrolls,
-      
-      // Cash Flow
       totalIncome,
       totalExpenses,
       netCashFlow,
       monthlyIncome,
       monthlyExpenses,
-      
-      // Overtime
       pendingOvertimes,
       totalOvertimeHours,
-      totalOvertimeAmount,
-      
-      // Projects
       activeProjects,
       completedProjects,
       totalProjectBudget,
       totalProjectSpent,
-      
-      // Materials
       totalMaterials,
       lowStockMaterials,
       totalMaterialValue,
-      
-      // Attendance
       presentToday,
       lateToday,
-      weeklyAttendance,
+      avgProjectProgress,
+      productivityScore,
+      budgetUtilization,
     };
   }, [workers, payrollRecords, transactions, overtimeRecords, projects, materials, attendanceRecords]);
 
-  // Recent activities
   const recentActivities = useMemo(() => {
     const activities: Array<{
       id: string;
@@ -147,92 +134,46 @@ export function Dashboard() {
       color: string;
     }> = [];
 
-    // Recent payroll records
-    payrollRecords
-      .slice(-5)
-      .forEach(p => {
-        activities.push({
-          id: p.id,
-          type: 'payroll',
-          action: p.status === 'paid' ? 'Gaji dibayarkan' : 'Gaji dihitung',
-          subject: p.workerName,
-          time: p.paidAt || p.createdAt,
-          icon: 'DollarSign',
-          color: p.status === 'paid' ? 'green' : 'blue'
-        });
+    payrollRecords.slice(-3).forEach(p => {
+      activities.push({
+        id: p.id,
+        type: 'payroll',
+        action: p.status === 'paid' ? 'Gaji dibayarkan' : 'Gaji dihitung',
+        subject: p.workerName,
+        time: p.paidAt || p.createdAt,
+        icon: 'DollarSign',
+        color: p.status === 'paid' ? 'green' : 'blue'
       });
+    });
 
-    // Recent transactions
-    transactions
-      .slice(-5)
-      .forEach(t => {
-        activities.push({
-          id: t.id,
-          type: 'transaction',
-          action: t.type === 'income' ? 'Kas masuk' : 'Kas keluar',
-          subject: t.description,
-          time: t.date,
-          icon: t.type === 'income' ? 'TrendingUp' : 'TrendingDown',
-          color: t.type === 'income' ? 'green' : 'red'
-        });
+    transactions.slice(-3).forEach(t => {
+      activities.push({
+        id: t.id,
+        type: 'transaction',
+        action: t.type === 'income' ? 'Kas masuk' : 'Kas keluar',
+        subject: t.description,
+        time: t.date,
+        icon: t.type === 'income' ? 'TrendingUp' : 'TrendingDown',
+        color: t.type === 'income' ? 'green' : 'red'
       });
+    });
 
-    // Recent overtime
-    overtimeRecords
-      .slice(-3)
-      .forEach(o => {
-        activities.push({
-          id: o.id,
-          type: 'overtime',
-          action: 'Lembur dicatat',
-          subject: o.workerName,
-          time: o.date,
-          icon: 'Clock',
-          color: 'orange'
-        });
-      });
-
-    // Recent attendance
-    attendanceRecords
-      .slice(-3)
-      .forEach(a => {
-        activities.push({
-          id: a.id,
-          type: 'attendance',
-          action: 'Presensi',
-          subject: a.workerName,
-          time: a.checkIn,
-          icon: 'QrCode',
-          color: 'purple'
-        });
-      });
-
-    // Sort by time and take latest 8
     return activities
       .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-      .slice(0, 8);
-  }, [payrollRecords, transactions, overtimeRecords, attendanceRecords]);
+      .slice(0, 6);
+  }, [payrollRecords, transactions]);
 
-  // Health indicators
   const healthIndicators = useMemo(() => {
     const indicators = [];
 
-    // Cash flow health
     if (stats.netCashFlow < 0) {
       indicators.push({
         type: 'error',
         message: 'Kas bersih negatif - perlu perhatian segera',
         action: 'Periksa pengeluaran'
       });
-    } else if (stats.monthlyExpenses > stats.monthlyIncome * 0.9) {
-      indicators.push({
-        type: 'warning',
-        message: 'Pengeluaran bulan ini tinggi (>90% pemasukan)',
-        action: 'Monitor pengeluaran'
-      });
     }
 
-    // Low stock materials
     if (stats.lowStockMaterials > 0) {
       indicators.push({
         type: 'warning',
@@ -241,7 +182,6 @@ export function Dashboard() {
       });
     }
 
-    // Pending items
     if (stats.pendingPayrolls > 5) {
       indicators.push({
         type: 'info',
@@ -250,11 +190,11 @@ export function Dashboard() {
       });
     }
 
-    if (stats.pendingOvertimes > 3) {
+    if (stats.productivityScore < 70) {
       indicators.push({
-        type: 'info',
-        message: `${stats.pendingOvertimes} lembur perlu review`,
-        action: 'Review lembur'
+        type: 'warning',
+        message: `Produktivitas rendah: ${stats.productivityScore}%`,
+        action: 'Evaluasi kehadiran'
       });
     }
 
@@ -263,13 +203,29 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Dashboard Overview
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Ringkasan real-time sistem manajemen Abimanyu Core
-        </p>
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Dashboard Overview
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Real-time insights powered by AI • {new Date().toLocaleDateString('id-ID')}
+          </p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 px-3 py-2 rounded-lg">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium text-green-700 dark:text-green-300">System Online</span>
+          </div>
+          <Button
+            variant="secondary"
+            icon={Zap}
+            className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-700"
+          >
+            AI Insights
+          </Button>
+        </div>
       </div>
 
       {/* Health Indicators */}
@@ -278,18 +234,18 @@ export function Dashboard() {
           {healthIndicators.map((indicator, index) => (
             <div
               key={index}
-              className={`p-3 rounded-lg border-l-4 ${
+              className={`p-4 rounded-xl border-l-4 backdrop-blur-sm ${
                 indicator.type === 'error' 
-                  ? 'bg-red-50 dark:bg-red-900/20 border-red-500 text-red-700 dark:text-red-300'
+                  ? 'bg-red-50/80 dark:bg-red-900/20 border-red-500 text-red-700 dark:text-red-300'
                   : indicator.type === 'warning'
-                  ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500 text-yellow-700 dark:text-yellow-300'
-                  : 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-700 dark:text-blue-300'
+                  ? 'bg-yellow-50/80 dark:bg-yellow-900/20 border-yellow-500 text-yellow-700 dark:text-yellow-300'
+                  : 'bg-blue-50/80 dark:bg-blue-900/20 border-blue-500 text-blue-700 dark:text-blue-300'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">{indicator.message}</p>
-                  <p className="text-sm opacity-75">{indicator.action}</p>
+                  <p className="font-semibold">{indicator.message}</p>
+                  <p className="text-sm opacity-75 mt-1">{indicator.action}</p>
                 </div>
                 <AlertTriangle className="w-5 h-5" />
               </div>
@@ -300,183 +256,128 @@ export function Dashboard() {
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Workers */}
-        <Card className="hover:scale-105 transition-transform">
+        <Card className="hover:scale-105 transition-all duration-300 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">
                 Tukang Aktif
               </p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">
                 {stats.activeWorkers}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                dari {stats.totalWorkers} total
+              <p className="text-xs text-blue-500 dark:text-blue-400 mt-1 flex items-center">
+                <Target className="w-3 h-3 mr-1" />
+                {stats.productivityScore}% produktivitas
               </p>
             </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
-              <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="p-3 bg-blue-500 rounded-xl shadow-lg">
+              <Users className="w-6 h-6 text-white" />
             </div>
           </div>
         </Card>
 
-        {/* Monthly Payroll */}
-        <Card className="hover:scale-105 transition-transform">
+        <Card className="hover:scale-105 transition-all duration-300 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-medium text-green-600 dark:text-green-400">
                 Gaji Bulan Ini
               </p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+              <p className="text-3xl font-bold text-green-700 dark:text-green-300">
                 {formatCurrency(stats.monthlyPayroll)}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-green-500 dark:text-green-400 mt-1 flex items-center">
+                <Award className="w-3 h-3 mr-1" />
                 {stats.pendingPayrolls} pending
               </p>
             </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
-              <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="p-3 bg-green-500 rounded-xl shadow-lg">
+              <DollarSign className="w-6 h-6 text-white" />
             </div>
           </div>
         </Card>
 
-        {/* Net Cash Flow */}
-        <Card className="hover:scale-105 transition-transform">
+        <Card className="hover:scale-105 transition-all duration-300 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-medium text-purple-600 dark:text-purple-400">
                 Kas Bersih
               </p>
-              <p className={`text-2xl font-bold ${
+              <p className={`text-3xl font-bold ${
                 stats.netCashFlow >= 0 
-                  ? 'text-purple-600 dark:text-purple-400' 
+                  ? 'text-purple-700 dark:text-purple-300' 
                   : 'text-red-600 dark:text-red-400'
               }`}>
                 {formatCurrency(stats.netCashFlow)}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center">
+              <p className="text-xs text-purple-500 dark:text-purple-400 mt-1 flex items-center">
                 {stats.netCashFlow >= 0 ? (
-                  <TrendingUp className="w-3 h-3 mr-1 text-green-500" />
+                  <TrendingUp className="w-3 h-3 mr-1" />
                 ) : (
-                  <TrendingDown className="w-3 h-3 mr-1 text-red-500" />
+                  <TrendingDown className="w-3 h-3 mr-1" />
                 )}
                 {stats.netCashFlow >= 0 ? 'Surplus' : 'Defisit'}
               </p>
             </div>
-            <div className={`p-3 rounded-full ${
-              stats.netCashFlow >= 0 
-                ? 'bg-purple-100 dark:bg-purple-900' 
-                : 'bg-red-100 dark:bg-red-900'
+            <div className={`p-3 rounded-xl shadow-lg ${
+              stats.netCashFlow >= 0 ? 'bg-purple-500' : 'bg-red-500'
             }`}>
-              <Activity className={`w-6 h-6 ${
-                stats.netCashFlow >= 0 
-                  ? 'text-purple-600 dark:text-purple-400' 
-                  : 'text-red-600 dark:text-red-400'
-              }`} />
+              <Activity className="w-6 h-6 text-white" />
             </div>
           </div>
         </Card>
 
-        {/* Active Projects */}
-        <Card className="hover:scale-105 transition-transform">
+        <Card className="hover:scale-105 transition-all duration-300 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-orange-200 dark:border-orange-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
                 Proyek Aktif
               </p>
-              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              <p className="text-3xl font-bold text-orange-700 dark:text-orange-300">
                 {stats.activeProjects}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {stats.completedProjects} selesai
+              <p className="text-xs text-orange-500 dark:text-orange-400 mt-1 flex items-center">
+                <BarChart3 className="w-3 h-3 mr-1" />
+                {Math.round(stats.avgProjectProgress)}% rata-rata
               </p>
             </div>
-            <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-full">
-              <MapPin className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+            <div className="p-3 bg-orange-500 rounded-xl shadow-lg">
+              <MapPin className="w-6 h-6 text-white" />
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Secondary Stats Grid */}
+      {/* Secondary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Overtime */}
-        <Card className="hover:scale-105 transition-transform">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Lembur Minggu Ini
-              </p>
-              <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                {stats.totalOvertimeHours}h
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {stats.pendingOvertimes} pending
-              </p>
-            </div>
-            <div className="p-3 bg-indigo-100 dark:bg-indigo-900 rounded-full">
-              <Clock className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            </div>
+        <Card className="hover:scale-105 transition-all duration-300">
+          <div className="text-center">
+            <Clock className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-indigo-600">{stats.totalOvertimeHours}h</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Lembur Minggu Ini</p>
           </div>
         </Card>
 
-        {/* Materials */}
-        <Card className="hover:scale-105 transition-transform">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Material
-              </p>
-              <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">
-                {stats.totalMaterials}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {stats.lowStockMaterials} stok menipis
-              </p>
-            </div>
-            <div className="p-3 bg-teal-100 dark:bg-teal-900 rounded-full">
-              <Package className="w-6 h-6 text-teal-600 dark:text-teal-400" />
-            </div>
+        <Card className="hover:scale-105 transition-all duration-300">
+          <div className="text-center">
+            <Package className="w-8 h-8 text-teal-600 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-teal-600">{stats.totalMaterials}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Total Material</p>
           </div>
         </Card>
 
-        {/* Attendance Today */}
-        <Card className="hover:scale-105 transition-transform">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Hadir Hari Ini
-              </p>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {stats.presentToday}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {stats.lateToday} terlambat
-              </p>
-            </div>
-            <div className="p-3 bg-emerald-100 dark:bg-emerald-900 rounded-full">
-              <QrCode className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-            </div>
+        <Card className="hover:scale-105 transition-all duration-300">
+          <div className="text-center">
+            <QrCode className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-emerald-600">{stats.presentToday}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Hadir Hari Ini</p>
           </div>
         </Card>
 
-        {/* Material Value */}
-        <Card className="hover:scale-105 transition-transform">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Nilai Material
-              </p>
-              <p className="text-2xl font-bold text-pink-600 dark:text-pink-400">
-                {formatCurrency(stats.totalMaterialValue)}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Total stok
-              </p>
-            </div>
-            <div className="p-3 bg-pink-100 dark:bg-pink-900 rounded-full">
-              <Package className="w-6 h-6 text-pink-600 dark:text-pink-400" />
-            </div>
+        <Card className="hover:scale-105 transition-all duration-300">
+          <div className="text-center">
+            <Target className="w-8 h-8 text-pink-600 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-pink-600">{Math.round(stats.budgetUtilization)}%</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Budget Utilization</p>
           </div>
         </Card>
       </div>
@@ -484,41 +385,41 @@ export function Dashboard() {
       {/* Detailed Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cash Flow Summary */}
-        <Card title="Ringkasan Kas Bulan Ini" className="h-fit">
+        <Card title="💰 Ringkasan Kas Bulan Ini" className="h-fit">
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
               <div>
-                <p className="text-sm font-medium text-green-800 dark:text-green-300">
+                <p className="text-sm font-medium text-green-700 dark:text-green-300">
                   Total Pemasukan
                 </p>
-                <p className="text-lg font-bold text-green-900 dark:text-green-200">
+                <p className="text-xl font-bold text-green-800 dark:text-green-200">
                   {formatCurrency(stats.monthlyIncome)}
                 </p>
               </div>
               <TrendingUp className="w-8 h-8 text-green-600" />
             </div>
             
-            <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl">
               <div>
-                <p className="text-sm font-medium text-red-800 dark:text-red-300">
+                <p className="text-sm font-medium text-red-700 dark:text-red-300">
                   Total Pengeluaran
                 </p>
-                <p className="text-lg font-bold text-red-900 dark:text-red-200">
+                <p className="text-xl font-bold text-red-800 dark:text-red-200">
                   {formatCurrency(stats.monthlyExpenses)}
                 </p>
               </div>
               <TrendingDown className="w-8 h-8 text-red-600" />
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl">
               <div>
-                <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
                   Kas Bersih Bulan Ini
                 </p>
-                <p className={`text-lg font-bold ${
+                <p className={`text-xl font-bold ${
                   (stats.monthlyIncome - stats.monthlyExpenses) >= 0 
-                    ? 'text-blue-900 dark:text-blue-200' 
-                    : 'text-red-900 dark:text-red-200'
+                    ? 'text-blue-800 dark:text-blue-200' 
+                    : 'text-red-800 dark:text-red-200'
                 }`}>
                   {formatCurrency(stats.monthlyIncome - stats.monthlyExpenses)}
                 </p>
@@ -529,18 +430,18 @@ export function Dashboard() {
         </Card>
 
         {/* Recent Activities */}
-        <Card title="Aktivitas Terbaru" className="h-fit">
+        <Card title="🔄 Aktivitas Terbaru" className="h-fit">
           <div className="space-y-3 max-h-80 overflow-y-auto">
             {recentActivities.length > 0 ? (
               recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                  <div className={`w-2 h-2 rounded-full ${
+                <div key={activity.id} className="flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200">
+                  <div className={`w-3 h-3 rounded-full ${
                     activity.color === 'green' ? 'bg-green-500' :
                     activity.color === 'blue' ? 'bg-blue-500' :
                     activity.color === 'orange' ? 'bg-orange-500' :
                     activity.color === 'red' ? 'bg-red-500' :
                     activity.color === 'purple' ? 'bg-purple-500' : 'bg-gray-500'
-                  }`} />
+                  } animate-pulse`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {activity.action}
@@ -568,25 +469,25 @@ export function Dashboard() {
 
       {/* Project Overview */}
       {projects.length > 0 && (
-        <Card title="Ringkasan Proyek">
+        <Card title="🏗️ Ringkasan Proyek">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+            <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl">
+              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                 {formatCurrency(stats.totalProjectBudget)}
               </p>
-              <p className="text-sm text-blue-700 dark:text-blue-300">Total Budget</p>
+              <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">Total Budget</p>
             </div>
-            <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+            <div className="text-center p-6 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl">
+              <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
                 {formatCurrency(stats.totalProjectSpent)}
               </p>
-              <p className="text-sm text-orange-700 dark:text-orange-300">Total Terpakai</p>
+              <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">Total Terpakai</p>
             </div>
-            <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {Math.round((stats.totalProjectSpent / stats.totalProjectBudget) * 100)}%
+            <div className="text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
+              <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                {Math.round(stats.budgetUtilization)}%
               </p>
-              <p className="text-sm text-green-700 dark:text-green-300">Utilisasi Budget</p>
+              <p className="text-sm text-green-700 dark:text-green-300 font-medium">Utilisasi Budget</p>
             </div>
           </div>
         </Card>
@@ -595,12 +496,11 @@ export function Dashboard() {
   );
 }
 
-// Helper functions
 function getWeekRange(date: Date) {
   const start = new Date(date);
-  start.setDate(date.getDate() - date.getDay() + 1); // Monday
+  start.setDate(date.getDate() - date.getDay() + 1);
   const end = new Date(start);
-  end.setDate(start.getDate() + 6); // Sunday
+  end.setDate(start.getDate() + 6);
   
   return {
     start: start.toISOString().split('T')[0],
