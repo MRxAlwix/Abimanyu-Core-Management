@@ -27,23 +27,28 @@ interface PremiumContextType {
 
 const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
 
+const defaultFeatures = {
+  unlimitedActions: false,
+  advancedReports: false,
+  cloudBackup: false,
+  prioritySupport: false,
+  customThemes: false,
+  aiAssistant: false,
+};
+
 export function PremiumStatusProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [premiumStatus, setPremiumStatus] = useLocalStorage<PremiumStatus>('premium_status', {
     isPremium: false,
-    features: {
-      unlimitedActions: false,
-      advancedReports: false,
-      cloudBackup: false,
-      prioritySupport: false,
-      customThemes: false,
-      aiAssistant: false,
-    },
+    features: defaultFeatures,
   });
   
   const [isPremiumActive, setIsPremiumActive] = useState(false);
 
   const checkPremiumExpiry = () => {
+    // Ensure features object exists with fallback
+    const currentFeatures = premiumStatus.features || defaultFeatures;
+    
     // Check user's premium status from auth
     const userPremium = user?.isPremium && user?.premiumUntil && 
       new Date(user.premiumUntil) > new Date();
@@ -57,7 +62,7 @@ export function PremiumStatusProvider({ children }: { children: ReactNode }) {
     setIsPremiumActive(isActive);
     
     // Update features based on premium status
-    if (isActive && !premiumStatus.features.unlimitedActions) {
+    if (isActive && !currentFeatures.unlimitedActions) {
       setPremiumStatus(prev => ({
         ...prev,
         isPremium: true,
@@ -77,21 +82,18 @@ export function PremiumStatusProvider({ children }: { children: ReactNode }) {
       setPremiumStatus(prev => ({
         ...prev,
         isPremium: false,
-        features: {
-          unlimitedActions: false,
-          advancedReports: false,
-          cloudBackup: false,
-          prioritySupport: false,
-          customThemes: false,
-          aiAssistant: false,
-        },
+        features: defaultFeatures,
       }));
       notificationService.warning('Langganan Premium Anda telah berakhir');
     }
   };
 
   const updatePremiumStatus = (status: Partial<PremiumStatus>) => {
-    setPremiumStatus(prev => ({ ...prev, ...status }));
+    setPremiumStatus(prev => ({ 
+      ...prev, 
+      ...status,
+      features: { ...defaultFeatures, ...prev.features, ...status.features }
+    }));
     checkPremiumExpiry();
     
     // Trigger real-time update
@@ -99,11 +101,20 @@ export function PremiumStatusProvider({ children }: { children: ReactNode }) {
   };
 
   const hasFeature = (feature: keyof PremiumStatus['features']): boolean => {
-    return isPremiumActive && premiumStatus.features[feature];
+    const currentFeatures = premiumStatus.features || defaultFeatures;
+    return isPremiumActive && currentFeatures[feature];
   };
 
   useEffect(() => {
-    checkPremiumExpiry();
+    // Ensure features object exists before calling checkPremiumExpiry
+    if (!premiumStatus.features) {
+      setPremiumStatus(prev => ({
+        ...prev,
+        features: defaultFeatures,
+      }));
+    } else {
+      checkPremiumExpiry();
+    }
     
     // Check expiry every minute
     const interval = setInterval(checkPremiumExpiry, 60000);
