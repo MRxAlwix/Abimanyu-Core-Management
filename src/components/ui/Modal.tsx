@@ -18,15 +18,42 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
       setCurrentTheme(e.detail.theme);
     };
 
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'abimanyu_theme' && e.newValue) {
+        setCurrentTheme(e.newValue);
+      }
+    };
+
     document.addEventListener('theme-change', handleThemeChange as EventListener);
+    window.addEventListener('storage', handleStorageChange);
     
     // Set initial theme
     setCurrentTheme(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
 
     return () => {
       document.removeEventListener('theme-change', handleThemeChange as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
+
+  // Close modal on Escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

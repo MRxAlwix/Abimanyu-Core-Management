@@ -13,7 +13,9 @@ import {
   Calendar,
   Settings,
   Crown,
-  UserCog
+  UserCog,
+  Calculator,
+  Gantt
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
@@ -35,6 +37,8 @@ const menuItems = [
   { id: 'projects', label: 'Manajemen Proyek', icon: FolderOpen },
   { id: 'materials', label: 'Kalkulator Material', icon: Package },
   { id: 'attendance', label: 'QR Presensi', icon: QrCode },
+  { id: 'rab', label: 'RAB Otomatis', icon: Calculator, premium: true },
+  { id: 'gantt', label: 'Timeline Proyek', icon: Gantt, premium: true },
   { id: 'reports', label: 'Laporan Mingguan', icon: Calendar },
   { id: 'analytics', label: 'Analitik', icon: BarChart3 },
   { id: 'premium', label: 'Premium', icon: Crown, premium: true },
@@ -151,7 +155,7 @@ export function Sidebar({ activeTab, onTabChange, isOpen, onClose }: SidebarProp
               Developed by <strong>Abimanyu</strong>
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-500">
-              v1.0.0
+              v1.1.0
             </p>
           </div>
         </div>

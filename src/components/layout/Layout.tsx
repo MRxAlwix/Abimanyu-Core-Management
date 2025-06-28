@@ -12,6 +12,8 @@ import { WeeklyReportSystem } from '../reports/WeeklyReport';
 import { SettingsPage } from '../settings/SettingsPage';
 import { PremiumFeatures } from '../premium/PremiumFeatures';
 import { WorkerManagement } from '../workers/WorkerManagement';
+import { RABCalculator } from '../rab/RABCalculator';
+import { ProjectGantt } from '../gantt/ProjectGantt';
 
 export function Layout() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -41,6 +43,10 @@ export function Layout() {
         return <PremiumFeatures />;
       case 'settings':
         return <SettingsPage />;
+      case 'rab':
+        return <RABCalculator />;
+      case 'gantt':
+        return <ProjectGantt projectId="demo" projectName="Demo Project" />;
       case 'analytics':
         return (
           <div className="text-center py-12">

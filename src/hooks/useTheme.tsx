@@ -27,13 +27,34 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (theme === 'dark') {
       root.classList.add('dark');
       body.classList.add('dark');
-      // Force update all components
+      // Force update all components with custom event
       document.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: 'dark' } }));
+      // Also trigger storage event for cross-tab sync
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'abimanyu_theme',
+        newValue: 'dark',
+        oldValue: theme === 'light' ? 'light' : null,
+      }));
     } else {
       root.classList.remove('dark');
       body.classList.remove('dark');
-      // Force update all components
+      // Force update all components with custom event
       document.dispatchEvent(new CustomEvent('theme-change', { detail: { theme: 'light' } }));
+      // Also trigger storage event for cross-tab sync
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'abimanyu_theme',
+        newValue: 'light',
+        oldValue: theme === 'dark' ? 'dark' : null,
+      }));
+    }
+
+    // Apply CSS variables for consistent theming
+    if (theme === 'dark') {
+      root.style.setProperty('--toast-bg', '#374151');
+      root.style.setProperty('--toast-color', '#F9FAFB');
+    } else {
+      root.style.setProperty('--toast-bg', '#FFFFFF');
+      root.style.setProperty('--toast-color', '#111827');
     }
   }, [theme]);
 

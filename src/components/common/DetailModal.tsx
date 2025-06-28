@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Calendar, User, DollarSign, Clock, MapPin, Package, FileText } from 'lucide-react';
+import { X, Calendar, User, DollarSign, Clock, MapPin, Package, FileText, Wrench } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/calculations';
 
 interface DetailModalProps {
@@ -169,6 +169,44 @@ export function DetailModal({ isOpen, onClose, data, type }: DetailModalProps) {
     </div>
   );
 
+  const renderOvertimeDetails = () => (
+    <div className="space-y-4">
+      <div className="flex items-center space-x-3">
+        <Clock className="w-8 h-8 text-orange-600" />
+        <div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Lembur {data.workerName}</h3>
+          <p className="text-gray-600 dark:text-gray-400">{formatDate(data.date)}</p>
+        </div>
+      </div>
+      
+      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Jam Lembur</p>
+            <p className="font-semibold text-gray-900 dark:text-white">{data.hours} jam</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Tarif per Jam</p>
+            <p className="font-semibold text-gray-900 dark:text-white">{formatCurrency(data.rate)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Tarif Lembur (1.5x)</p>
+            <p className="font-semibold text-orange-600">{formatCurrency(data.rate * 1.5)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Total Bayar</p>
+            <p className="font-semibold text-green-600">{formatCurrency(data.total)}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Deskripsi Pekerjaan</p>
+        <p className="text-gray-900 dark:text-white">{data.description}</p>
+      </div>
+    </div>
+  );
+
   const renderProjectDetails = () => (
     <div className="space-y-4">
       <div className="flex items-center space-x-3">
@@ -223,6 +261,112 @@ export function DetailModal({ isOpen, onClose, data, type }: DetailModalProps) {
     </div>
   );
 
+  const renderMaterialDetails = () => (
+    <div className="space-y-4">
+      <div className="flex items-center space-x-3">
+        <Package className="w-8 h-8 text-teal-600" />
+        <div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">{data.name}</h3>
+          <p className="text-gray-600 dark:text-gray-400">{data.category}</p>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Supplier</p>
+          <p className="font-semibold text-gray-900 dark:text-white">{data.supplier}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Satuan</p>
+          <p className="font-semibold text-gray-900 dark:text-white">{data.unit}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Harga per Satuan</p>
+          <p className="font-semibold text-blue-600">{formatCurrency(data.pricePerUnit)}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Stok Saat Ini</p>
+          <p className={`font-semibold ${data.stock <= data.minStock ? 'text-red-600' : 'text-green-600'}`}>
+            {data.stock} {data.unit}
+          </p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Stok Minimum</p>
+          <p className="font-semibold text-gray-900 dark:text-white">{data.minStock} {data.unit}</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Nilai Total</p>
+          <p className="font-semibold text-green-600">{formatCurrency(data.stock * data.pricePerUnit)}</p>
+        </div>
+      </div>
+      
+      {data.stock <= data.minStock && (
+        <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
+          <p className="text-red-800 dark:text-red-300 font-medium">⚠️ Stok Menipis!</p>
+          <p className="text-red-600 dark:text-red-400 text-sm">Segera lakukan pemesanan ulang material ini.</p>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderAttendanceDetails = () => (
+    <div className="space-y-4">
+      <div className="flex items-center space-x-3">
+        <Clock className="w-8 h-8 text-emerald-600" />
+        <div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Presensi {data.workerName}</h3>
+          <p className="text-gray-600 dark:text-gray-400">{formatDate(data.date)}</p>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Jam Masuk</p>
+          <p className="font-semibold text-gray-900 dark:text-white">
+            {new Date(data.checkIn).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+          </p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Jam Keluar</p>
+          <p className="font-semibold text-gray-900 dark:text-white">
+            {data.checkOut ? new Date(data.checkOut).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '-'}
+          </p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Status</p>
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            data.status === 'present' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+            data.status === 'late' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' :
+            data.status === 'overtime' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+            'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+          }`}>
+            {data.status === 'present' ? 'Hadir' : 
+             data.status === 'late' ? 'Terlambat' :
+             data.status === 'overtime' ? 'Lembur' : 'Tidak Hadir'}
+          </span>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">QR Scan</p>
+          <p className={`font-semibold ${data.qrScanned ? 'text-green-600' : 'text-gray-600'}`}>
+            {data.qrScanned ? 'Ya' : 'Manual'}
+          </p>
+        </div>
+      </div>
+      
+      <div>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Lokasi</p>
+        <p className="text-gray-900 dark:text-white">{data.location}</p>
+      </div>
+      
+      {data.notes && (
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Catatan</p>
+          <p className="text-gray-900 dark:text-white">{data.notes}</p>
+        </div>
+      )}
+    </div>
+  );
+
   const renderContent = () => {
     switch (type) {
       case 'worker':
@@ -231,8 +375,14 @@ export function DetailModal({ isOpen, onClose, data, type }: DetailModalProps) {
         return renderPayrollDetails();
       case 'transaction':
         return renderTransactionDetails();
+      case 'overtime':
+        return renderOvertimeDetails();
       case 'project':
         return renderProjectDetails();
+      case 'material':
+        return renderMaterialDetails();
+      case 'attendance':
+        return renderAttendanceDetails();
       default:
         return (
           <div className="text-center py-8">
