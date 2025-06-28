@@ -3,13 +3,14 @@ import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from './hooks/useTheme';
 import { AuthProvider, useAuth } from './components/auth/AuthProvider';
 import { ActionLimitProvider } from './hooks/useActionLimit';
-import { PremiumStatusProvider } from './components/premium/PremiumStatusProvider';
+import { PremiumStatusProvider } from './hooks/usePremiumStatus';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
 import { LoginForm } from './components/auth/LoginForm';
 import { notificationService } from './services/notificationService';
 import { backupService } from './services/backupService';
 import { dataService } from './services/dataService';
+import { soundService } from './services/soundService';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
@@ -38,10 +39,11 @@ function AppContent() {
         // Show welcome message after a short delay
         setTimeout(() => {
           notificationService.info('Selamat datang di Abimanyu Core Management!');
+          soundService.playSound('notification');
         }, 1500);
 
         // Log successful initialization
-        console.log('Abimanyu Core Management initialized successfully');
+        console.log('Abimanyu Core Management v2.0.0 initialized successfully');
       } catch (error) {
         console.error('Failed to initialize application:', error);
         notificationService.error('Gagal menginisialisasi aplikasi');

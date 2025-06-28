@@ -14,6 +14,8 @@ import { PremiumFeatures } from '../premium/PremiumFeatures';
 import { WorkerManagement } from '../workers/WorkerManagement';
 import { RABCalculator } from '../rab/RABCalculator';
 import { ProjectGantt } from '../gantt/ProjectGantt';
+import { KasbonSystem } from '../kasbon/KasbonSystem';
+import { AIAssistant } from '../ai/AIAssistant';
 
 export function Layout() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -31,6 +33,8 @@ export function Layout() {
         return <CashFlowSystem />;
       case 'overtime':
         return <OvertimeSystem />;
+      case 'kasbon':
+        return <KasbonSystem />;
       case 'projects':
         return <ProjectSystem />;
       case 'materials':
@@ -47,6 +51,8 @@ export function Layout() {
         return <RABCalculator />;
       case 'gantt':
         return <ProjectGantt projectId="demo" projectName="Demo Project" />;
+      case 'ai-assistant':
+        return <AIAssistant />;
       case 'analytics':
         return (
           <div className="text-center py-12">

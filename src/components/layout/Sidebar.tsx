@@ -1,7 +1,7 @@
 import React from 'react';
-import { Home, Users, DollarSign, Clock, FileText, BarChart3, X, FolderOpen, Package, QrCode, Calendar, Settings, Crown, UserCog, Calculator, GanttChart as Gantt } from 'lucide-react';
+import { Home, Users, DollarSign, Clock, FileText, BarChart3, X, FolderOpen, Package, QrCode, Calendar, Settings, Crown, UserCog, Calculator, GanttChart as Gantt, CreditCard, Bot } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { usePremiumStatus } from '../../hooks/usePremiumStatus';
 import { ActionLimitIndicator } from '../premium/ActionLimitIndicator';
 
 interface SidebarProps {
@@ -17,11 +17,13 @@ const menuItems = [
   { id: 'payroll', label: 'Sistem Gaji', icon: Users },
   { id: 'cashflow', label: 'Kas Masuk/Keluar', icon: DollarSign },
   { id: 'overtime', label: 'Hitungan Lembur', icon: Clock },
+  { id: 'kasbon', label: 'Kasbon Tukang', icon: CreditCard },
   { id: 'projects', label: 'Manajemen Proyek', icon: FolderOpen },
   { id: 'materials', label: 'Kalkulator Material', icon: Package },
   { id: 'attendance', label: 'QR Presensi', icon: QrCode },
   { id: 'rab', label: 'RAB Otomatis', icon: Calculator, premium: true },
   { id: 'gantt', label: 'Timeline Proyek', icon: Gantt, premium: true },
+  { id: 'ai-assistant', label: 'AI Assistant', icon: Bot, premium: true },
   { id: 'reports', label: 'Laporan Mingguan', icon: Calendar },
   { id: 'analytics', label: 'Analitik', icon: BarChart3 },
   { id: 'premium', label: 'Premium', icon: Crown, premium: true },
@@ -30,11 +32,7 @@ const menuItems = [
 
 export function Sidebar({ activeTab, onTabChange, isOpen, onClose }: SidebarProps) {
   const { user } = useAuth();
-  const [premiumStatus] = useLocalStorage('premium_status', { isPremium: false });
-
-  const isPremiumActive = premiumStatus.isPremium && 
-    premiumStatus.premiumUntil && 
-    new Date(premiumStatus.premiumUntil) > new Date();
+  const { isPremiumActive } = usePremiumStatus();
 
   return (
     <>
@@ -138,7 +136,7 @@ export function Sidebar({ activeTab, onTabChange, isOpen, onClose }: SidebarProp
               Developed by <strong>Abimanyu</strong>
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-500">
-              v1.1.0
+              v2.0.0
             </p>
           </div>
         </div>
