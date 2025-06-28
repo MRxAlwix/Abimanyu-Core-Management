@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Eye, CheckCircle, CreditCard, Trash2 } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { UniversalDetailModal } from '../common/UniversalDetailModal';
+import { DetailModal } from '../common/DetailModal';
 import { KasbonRecord } from './KasbonSystem';
 import { formatCurrency, formatDate } from '../../utils/calculations';
 
@@ -145,7 +145,7 @@ export function KasbonTable({ records, onAction }: KasbonTableProps) {
         </div>
       </Card>
 
-      <UniversalDetailModal
+      <DetailModal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         data={selectedRecord}
