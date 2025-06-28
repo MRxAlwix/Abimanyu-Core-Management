@@ -1,8 +1,10 @@
 import toast from 'react-hot-toast';
 import { NOTIFICATION_TYPES } from '../config/constants';
+import { soundService } from './soundService';
 
 class NotificationService {
   success(message: string, options?: any) {
+    soundService.playSound('success');
     return toast.success(message, {
       duration: 4000,
       position: 'top-right',
@@ -15,6 +17,7 @@ class NotificationService {
   }
 
   error(message: string, options?: any) {
+    soundService.playSound('error');
     return toast.error(message, {
       duration: 5000,
       position: 'top-right',
@@ -27,6 +30,7 @@ class NotificationService {
   }
 
   warning(message: string, options?: any) {
+    soundService.playSound('notification');
     return toast(message, {
       duration: 4000,
       position: 'top-right',
@@ -40,6 +44,7 @@ class NotificationService {
   }
 
   info(message: string, options?: any) {
+    soundService.playSound('notification');
     return toast(message, {
       duration: 4000,
       position: 'top-right',

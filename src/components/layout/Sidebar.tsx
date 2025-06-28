@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { ActionLimitIndicator } from '../premium/ActionLimitIndicator';
 
 interface SidebarProps {
   activeTab: string;
@@ -94,6 +95,11 @@ export function Sidebar({ activeTab, onTabChange, isOpen, onClose }: SidebarProp
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Action Limit Indicator */}
+        <div className="p-4">
+          <ActionLimitIndicator />
         </div>
         
         <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
