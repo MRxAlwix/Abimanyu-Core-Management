@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building, User, Mail, Phone, Briefcase, Users, FolderOpen, ArrowLeft } from 'lucide-react';
+import { Building, User, Mail, Phone, Briefcase, Users, FolderOpen, ArrowLeft, Lock, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { LoadingSpinner } from '../common/LoadingSpinner';
@@ -16,6 +16,11 @@ const registrationSchema = z.object({
   businessType: z.string().min(1, 'Jenis usaha harus dipilih'),
   projectCount: z.number().min(1, 'Jumlah proyek minimal 1'),
   workerCount: z.number().min(1, 'Jumlah tukang minimal 1'),
+  password: z.string().min(6, 'Password minimal 6 karakter'),
+  confirmPassword: z.string().min(6, 'Konfirmasi password minimal 6 karakter'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Password dan konfirmasi password tidak sama",
+  path: ["confirmPassword"],
 });
 
 type RegistrationFormData = z.infer<typeof registrationSchema>;
@@ -27,6 +32,8 @@ interface RegistrationFormProps {
 export function RegistrationForm({ onBack }: RegistrationFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -49,7 +56,8 @@ export function RegistrationForm({ onBack }: RegistrationFormProps) {
   const onSubmit = async (data: RegistrationFormData) => {
     setIsSubmitting(true);
     try {
-      await registrationService.submitRegistration(data);
+      const { confirmPassword, ...registrationData } = data;
+      await registrationService.submitRegistration(registrationData);
       setIsSuccess(true);
     } catch (error: any) {
       // Error handled in service
@@ -71,6 +79,11 @@ export function RegistrationForm({ onBack }: RegistrationFormProps) {
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             Pendaftaran Anda telah dikirim. Tim developer akan meninjau dan mengirim konfirmasi melalui email dalam 1-2 hari kerja.
           </p>
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
+            <p className="text-sm text-blue-800 dark:text-blue-300">
+              <strong>Catatan:</strong> Simpan password yang Anda buat. Setelah disetujui, gunakan email dan password ini untuk login.
+            </p>
+          </div>
           <Button onClick={onBack} className="w-full">
             Kembali ke Login
           </Button>
@@ -232,6 +245,68 @@ export function RegistrationForm({ onBack }: RegistrationFormProps) {
             </div>
           </div>
 
+          {/* Password Section */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+            <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-4 flex items-center">
+              <Lock className="w-4 h-4 mr-2" />
+              Buat Password untuk Login
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    {...register('password')}
+                    type={showPassword ? 'text' : 'password'}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Minimal 6 karakter"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Konfirmasi Password
+                </label>
+                <div className="relative">
+                  <input
+                    {...register('confirmPassword')}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Ulangi password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
             <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">
               Yang Anda Dapatkan:
@@ -242,7 +317,8 @@ export function RegistrationForm({ onBack }: RegistrationFormProps) {
               <li>✓ QR Code presensi dan lokasi</li>
               <li>✓ RAB otomatis dan kalkulasi material</li>
               <li>✓ Laporan mingguan dan export data</li>
-              <li>✓ Backup otomatis ke Google Drive</li>
+              <li>✓ AI Assistant untuk analisis bisnis</li>
+              <li>✓ Premium features selama 1 tahun</li>
               <li>✓ Support prioritas 24/7</li>
             </ul>
           </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, LogIn, Shield, UserPlus, Settings, Sparkles, Lock, CheckCircle, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Shield, UserPlus, Settings, Sparkles, Lock, CheckCircle, ArrowRight, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { LoadingSpinner } from '../common/LoadingSpinner';
@@ -25,6 +25,7 @@ export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentView, setCurrentView] = useState<'login' | 'register' | 'developer'>('login');
   const [registrationStatus, setRegistrationStatus] = useState<string>('');
+  const [loginError, setLoginError] = useState<string>('');
 
   const {
     register,
@@ -40,10 +41,14 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
     setRegistrationStatus('');
+    setLoginError('');
     
     try {
       await login(data.username, data.password);
     } catch (error: any) {
+      setLoginError(error.message);
+      
+      // Check registration status for better user feedback
       if (data.username.includes('@')) {
         const status = authService.checkRegistrationStatus(data.username);
         setRegistrationStatus(status.message);
@@ -57,6 +62,7 @@ export function LoginForm() {
     if (watchedUsername && watchedUsername.includes('@')) {
       const status = authService.checkRegistrationStatus(watchedUsername);
       setRegistrationStatus(status.message);
+      setLoginError('');
     }
   };
 
@@ -120,20 +126,6 @@ export function LoginForm() {
                   {errors.username.message}
                 </p>
               )}
-              {registrationStatus && (
-                <div className={`mt-2 p-3 rounded-lg flex items-center ${
-                  registrationStatus.includes('disetujui') ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' :
-                  registrationStatus.includes('ditolak') ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300' :
-                  'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300'
-                }`}>
-                  {registrationStatus.includes('disetujui') ? (
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                  ) : (
-                    <Lock className="w-4 h-4 mr-2" />
-                  )}
-                  <span className="text-sm font-medium">{registrationStatus}</span>
-                </div>
-              )}
             </div>
 
             <div>
@@ -163,6 +155,30 @@ export function LoginForm() {
               )}
             </div>
           </div>
+
+          {/* Login Error */}
+          {loginError && (
+            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center">
+              <AlertCircle className="w-4 h-4 mr-2 text-red-600 dark:text-red-400" />
+              <span className="text-sm font-medium text-red-700 dark:text-red-300">{loginError}</span>
+            </div>
+          )}
+
+          {/* Registration Status */}
+          {registrationStatus && (
+            <div className={`p-3 rounded-lg flex items-center ${
+              registrationStatus.includes('disetujui') ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800' :
+              registrationStatus.includes('ditolak') ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800' :
+              'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800'
+            }`}>
+              {registrationStatus.includes('disetujui') ? (
+                <CheckCircle className="w-4 h-4 mr-2" />
+              ) : (
+                <AlertCircle className="w-4 h-4 mr-2" />
+              )}
+              <span className="text-sm font-medium">{registrationStatus}</span>
+            </div>
+          )}
 
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -247,7 +263,7 @@ export function LoginForm() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="font-medium">Developer:</span>
-                <span className="font-mono bg-white dark:bg-gray-700 px-2 py-1 rounded">developer | dev123456</span>
+                <span className="font-mono bg-white dark:bg-gray-700 px-2 py-1 rounded">developer@abimanyu.com | dev123456</span>
               </div>
             </div>
           </div>

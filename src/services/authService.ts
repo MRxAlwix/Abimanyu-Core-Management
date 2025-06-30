@@ -38,66 +38,57 @@ class AuthService {
   login(username: string, password: string): Promise<AuthState> {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        // Developer access
-        if (username === 'developer' && password === 'dev123456') {
-          const user: User = {
-            id: 'dev-1',
-            username: 'developer',
-            email: 'developer@abimanyu.com',
-            role: 'developer',
-            isPremium: true,
-            createdAt: new Date().toISOString(),
-            lastLogin: new Date().toISOString(),
-          };
-
-          const token = this.generateToken(user);
-          const authState: AuthState = {
-            user,
-            token,
-            isAuthenticated: true,
-          };
-
-          const encryptedAuth = this.encryptData(JSON.stringify(authState));
-          localStorage.setItem('abimanyu_auth', encryptedAuth);
-          resolve(authState);
-          return;
-        }
-
-        // Demo admin access
-        if (username === 'admin' && password === 'admin123') {
-          const user: User = {
-            id: '1',
-            username: 'admin',
-            email: 'admin@abimanyu.com',
-            role: 'admin',
-            companyName: 'Demo Company',
-            isPremium: true,
-            premiumUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-            createdAt: new Date().toISOString(),
-            lastLogin: new Date().toISOString(),
-          };
-
-          const token = this.generateToken(user);
-          const authState: AuthState = {
-            user,
-            token,
-            isAuthenticated: true,
-          };
-
-          const encryptedAuth = this.encryptData(JSON.stringify(authState));
-          localStorage.setItem('abimanyu_auth', encryptedAuth);
-          resolve(authState);
-          return;
-        }
-
-        // Check registered users
-        const registeredUser = registrationService.findUserByEmail(username);
-        if (registeredUser) {
-          // For demo, password is email without domain
-          const expectedPassword = username.split('@')[0];
-          if (password === expectedPassword) {
+        try {
+          // First check registered users with proper password validation
+          const registeredUser = registrationService.findUserByCredentials(username, password);
+          if (registeredUser) {
             const user: User = {
-              ...registeredUser,
+              id: registeredUser.id,
+              username: registeredUser.username,
+              email: registeredUser.email,
+              role: registeredUser.role,
+              companyName: registeredUser.companyName,
+              ownerName: registeredUser.ownerName,
+              phone: registeredUser.phone,
+              businessType: registeredUser.businessType,
+              isPremium: registeredUser.isPremium,
+              premiumUntil: registeredUser.premiumUntil,
+              createdAt: registeredUser.createdAt,
+              lastLogin: new Date().toISOString(),
+            };
+
+            // Update last login
+            const users = registrationService.getUsers();
+            const userIndex = users.findIndex(u => u.id === registeredUser.id);
+            if (userIndex !== -1) {
+              users[userIndex].lastLogin = user.lastLogin;
+              localStorage.setItem('abimanyu_users', JSON.stringify(users));
+            }
+
+            const token = this.generateToken(user);
+            const authState: AuthState = {
+              user,
+              token,
+              isAuthenticated: true,
+            };
+
+            const encryptedAuth = this.encryptData(JSON.stringify(authState));
+            localStorage.setItem('abimanyu_auth', encryptedAuth);
+            resolve(authState);
+            return;
+          }
+
+          // Fallback for demo accounts (backward compatibility)
+          if (username === 'developer@abimanyu.com' && password === 'dev123456') {
+            const user: User = {
+              id: 'dev-1',
+              username: 'developer',
+              email: 'developer@abimanyu.com',
+              role: 'developer',
+              companyName: 'Abimanyu Development',
+              isPremium: true,
+              premiumUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+              createdAt: new Date().toISOString(),
               lastLogin: new Date().toISOString(),
             };
 
@@ -113,9 +104,60 @@ class AuthService {
             resolve(authState);
             return;
           }
-        }
 
-        reject(new Error('Email atau password salah'));
+          if (username === 'admin@abimanyu.com' && password === 'admin123') {
+            const user: User = {
+              id: 'admin-1',
+              username: 'admin',
+              email: 'admin@abimanyu.com',
+              role: 'admin',
+              companyName: 'Abimanyu Demo Company',
+              isPremium: true,
+              premiumUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+              createdAt: new Date().toISOString(),
+              lastLogin: new Date().toISOString(),
+            };
+
+            const token = this.generateToken(user);
+            const authState: AuthState = {
+              user,
+              token,
+              isAuthenticated: true,
+            };
+
+            const encryptedAuth = this.encryptData(JSON.stringify(authState));
+            localStorage.setItem('abimanyu_auth', encryptedAuth);
+            resolve(authState);
+            return;
+          }
+
+          // Check if user exists but password is wrong
+          const userExists = registrationService.findUserByEmail(username);
+          if (userExists) {
+            reject(new Error('Password salah. Silakan coba lagi.'));
+            return;
+          }
+
+          // Check registration status
+          const registration = registrationService.checkRegistrationStatus(username);
+          if (registration) {
+            switch (registration.status) {
+              case 'pending':
+                reject(new Error('Pendaftaran Anda sedang ditinjau oleh developer. Silakan tunggu konfirmasi.'));
+                return;
+              case 'rejected':
+                reject(new Error(`Pendaftaran ditolak: ${registration.rejectionReason || 'Tidak memenuhi syarat'}`));
+                return;
+              case 'approved':
+                reject(new Error('Akun sudah disetujui. Silakan gunakan password yang benar.'));
+                return;
+            }
+          }
+
+          reject(new Error('Email tidak terdaftar. Silakan daftar terlebih dahulu atau periksa email Anda.'));
+        } catch (error) {
+          reject(new Error('Terjadi kesalahan saat login. Silakan coba lagi.'));
+        }
       }, 1000);
     });
   }
@@ -161,19 +203,46 @@ class AuthService {
     const registration = registrationService.checkRegistrationStatus(email);
     
     if (!registration) {
-      return { status: 'not_found', message: 'Email belum terdaftar' };
+      return { status: 'not_found', message: 'Email belum terdaftar. Silakan daftar terlebih dahulu.' };
     }
 
     switch (registration.status) {
       case 'pending':
-        return { status: 'pending', message: 'Pendaftaran sedang ditinjau oleh developer' };
+        return { status: 'pending', message: 'Pendaftaran sedang ditinjau oleh developer. Harap tunggu konfirmasi.' };
       case 'approved':
-        return { status: 'approved', message: 'Pendaftaran disetujui, silakan login' };
+        return { status: 'approved', message: 'Pendaftaran disetujui. Silakan login dengan password yang Anda daftarkan.' };
       case 'rejected':
-        return { status: 'rejected', message: `Pendaftaran ditolak: ${registration.rejectionReason}` };
+        return { status: 'rejected', message: `Pendaftaran ditolak: ${registration.rejectionReason || 'Tidak memenuhi syarat'}` };
       default:
-        return { status: 'unknown', message: 'Status tidak diketahui' };
+        return { status: 'unknown', message: 'Status pendaftaran tidak diketahui.' };
     }
+  }
+
+  // Change password
+  changePassword(userId: string, oldPassword: string, newPassword: string): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      try {
+        const user = registrationService.findUserByEmail(this.getCurrentUser()?.user?.email || '');
+        if (!user || user.password !== oldPassword) {
+          reject(new Error('Password lama tidak benar'));
+          return;
+        }
+
+        if (newPassword.length < 6) {
+          reject(new Error('Password baru minimal 6 karakter'));
+          return;
+        }
+
+        const success = registrationService.updateUserPassword(userId, newPassword);
+        if (success) {
+          resolve(true);
+        } else {
+          reject(new Error('Gagal mengubah password'));
+        }
+      } catch (error) {
+        reject(new Error('Terjadi kesalahan saat mengubah password'));
+      }
+    });
   }
 }
 
