@@ -7,12 +7,10 @@ import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 import { RegistrationForm } from './RegistrationForm';
-import { DeveloperDashboard } from './DeveloperDashboard';
 import { useAuth } from './AuthProvider';
-import { authService } from '../../services/authService';
 
 const loginSchema = z.object({
-  username: z.string().min(1, 'Email harus diisi'),
+  email: z.string().email('Format email tidak valid'),
   password: z.string().min(1, 'Password harus diisi'),
   rememberMe: z.boolean().optional(),
 });
@@ -23,55 +21,32 @@ export function LoginForm() {
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentView, setCurrentView] = useState<'login' | 'register' | 'developer'>('login');
-  const [registrationStatus, setRegistrationStatus] = useState<string>('');
+  const [currentView, setCurrentView] = useState<'login' | 'register'>('login');
   const [loginError, setLoginError] = useState<string>('');
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
-  const watchedUsername = watch('username');
-
   const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
-    setRegistrationStatus('');
     setLoginError('');
     
     try {
-      await login(data.username, data.password);
+      await login(data.email, data.password);
     } catch (error: any) {
       setLoginError(error.message);
-      
-      // Check registration status for better user feedback
-      if (data.username.includes('@')) {
-        const status = authService.checkRegistrationStatus(data.username);
-        setRegistrationStatus(status.message);
-      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const checkRegistrationStatus = () => {
-    if (watchedUsername && watchedUsername.includes('@')) {
-      const status = authService.checkRegistrationStatus(watchedUsername);
-      setRegistrationStatus(status.message);
-      setLoginError('');
-    }
-  };
-
   if (currentView === 'register') {
     return <RegistrationForm onBack={() => setCurrentView('login')} />;
-  }
-
-  if (currentView === 'developer') {
-    return <DeveloperDashboard />;
   }
 
   return (
@@ -110,20 +85,19 @@ export function LoginForm() {
               </label>
               <div className="relative">
                 <input
-                  {...register('username')}
+                  {...register('email')}
                   type="email"
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200 pl-12"
                   placeholder="admin@perusahaan.com"
-                  onBlur={checkRegistrationStatus}
                 />
                 <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                   <div className="w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
                 </div>
               </div>
-              {errors.username && (
+              {errors.email && (
                 <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center">
                   <Lock className="w-4 h-4 mr-1" />
-                  {errors.username.message}
+                  {errors.email.message}
                 </p>
               )}
             </div>
@@ -161,22 +135,6 @@ export function LoginForm() {
             <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 flex items-center">
               <AlertCircle className="w-4 h-4 mr-2 text-red-600 dark:text-red-400" />
               <span className="text-sm font-medium text-red-700 dark:text-red-300">{loginError}</span>
-            </div>
-          )}
-
-          {/* Registration Status */}
-          {registrationStatus && (
-            <div className={`p-3 rounded-lg flex items-center ${
-              registrationStatus.includes('disetujui') ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800' :
-              registrationStatus.includes('ditolak') ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800' :
-              'bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800'
-            }`}>
-              {registrationStatus.includes('disetujui') ? (
-                <CheckCircle className="w-4 h-4 mr-2" />
-              ) : (
-                <AlertCircle className="w-4 h-4 mr-2" />
-              )}
-              <span className="text-sm font-medium">{registrationStatus}</span>
             </div>
           )}
 
@@ -228,50 +186,20 @@ export function LoginForm() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3">
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200"
-              icon={UserPlus}
-              onClick={() => setCurrentView('register')}
-            >
-              Register New Company
-            </Button>
-
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
-              icon={Settings}
-              onClick={() => setCurrentView('developer')}
-            >
-              Developer Dashboard
-            </Button>
-          </div>
-        </div>
-
-        <div className="mt-8 text-center">
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-700">
-            <p className="text-sm text-blue-800 dark:text-blue-300 font-semibold mb-2">
-              🚀 Demo Credentials
-            </p>
-            <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Admin:</span>
-                <span className="font-mono bg-white dark:bg-gray-700 px-2 py-1 rounded">admin@abimanyu.com | admin123</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-medium">Developer:</span>
-                <span className="font-mono bg-white dark:bg-gray-700 px-2 py-1 rounded">developer@abimanyu.com | dev123456</span>
-              </div>
-            </div>
-          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-200"
+            icon={UserPlus}
+            onClick={() => setCurrentView('register')}
+          >
+            Register New Company
+          </Button>
         </div>
 
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Powered by <strong className="text-blue-600 dark:text-blue-400">Abimanyu AI</strong> • v2.1.0
+            Powered by <strong className="text-blue-600 dark:text-blue-400">Abimanyu AI</strong> • v2.2.0
           </p>
         </div>
       </Card>

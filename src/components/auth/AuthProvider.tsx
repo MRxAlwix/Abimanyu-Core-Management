@@ -4,7 +4,7 @@ import { notificationService } from '../../services/notificationService';
 import { LoadingSpinner } from '../common/LoadingSpinner';
 
 interface AuthContextType extends AuthState {
-  login: (username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
   isLoading: boolean;
@@ -22,17 +22,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Check for existing auth on app start
-    const currentAuth = authService.getCurrentUser();
-    if (currentAuth && authService.validateToken(currentAuth.token!)) {
-      setAuthState(currentAuth);
-    }
-    setIsLoading(false);
+    const initializeAuth = async () => {
+      try {
+        // Try to refresh session from Supabase
+        const refreshedAuth = await authService.refreshSession();
+        if (refreshedAuth) {
+          setAuthState(refreshedAuth);
+        } else {
+          // Fallback to localStorage
+          const currentAuth = authService.getCurrentUser();
+          if (currentAuth && authService.validateToken(currentAuth.token!)) {
+            setAuthState(currentAuth);
+          }
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const authData = await authService.login(username, password);
+      const authData = await authService.login(email, password);
       setAuthState(authData);
       notificationService.success(`Selamat datang, ${authData.user?.username}!`);
     } catch (error: any) {
@@ -43,14 +59,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    authService.logout();
-    setAuthState({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-    });
-    notificationService.info('Anda telah logout');
+  const logout = async () => {
+    try {
+      await authService.logout();
+      setAuthState({
+        user: null,
+        token: null,
+        isAuthenticated: false,
+      });
+      notificationService.info('Anda telah logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const updateProfile = async (data: Partial<User>) => {

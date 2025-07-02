@@ -4,20 +4,11 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { useAuth } from '../auth/AuthProvider';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { paymentService } from '../../services/paymentService';
 import { notificationService } from '../../services/notificationService';
-
-interface PremiumUser {
-  isPremium: boolean;
-  premiumUntil?: string;
-  subscriptionType?: 'monthly' | 'yearly';
-}
 
 export function PremiumFeatures() {
   const { user } = useAuth();
-  const [premiumStatus, setPremiumStatus] = useLocalStorage<PremiumUser>('premium_status', {
-    isPremium: false,
-  });
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -26,7 +17,7 @@ export function PremiumFeatures() {
     {
       icon: Cloud,
       title: 'Backup Otomatis ke Cloud',
-      description: 'Backup otomatis ke Google Drive setiap hari',
+      description: 'Backup otomatis ke Supabase setiap hari',
       free: false,
     },
     {
@@ -82,26 +73,31 @@ export function PremiumFeatures() {
   ];
 
   const handleUpgrade = async () => {
+    if (!user) {
+      notificationService.error('Silakan login terlebih dahulu');
+      return;
+    }
+
     setIsProcessing(true);
     
     try {
-      // Simulate payment process with Midtrans
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const premiumUntil = selectedPlan === 'monthly' 
-        ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
-      
-      setPremiumStatus({
-        isPremium: true,
-        premiumUntil,
+      const paymentData = await paymentService.createPayment({
+        userId: user.id,
         subscriptionType: selectedPlan,
+        customerDetails: {
+          firstName: user.ownerName.split(' ')[0] || user.username,
+          lastName: user.ownerName.split(' ').slice(1).join(' ') || '',
+          email: user.email,
+          phone: user.phone || '',
+        },
       });
+
+      // Open Midtrans payment modal
+      await paymentService.openPaymentModal(paymentData.token);
       
       setIsUpgradeModalOpen(false);
-      notificationService.success('Selamat! Akun Anda telah upgrade ke Premium!');
-    } catch (error) {
-      notificationService.error('Pembayaran gagal. Silakan coba lagi.');
+    } catch (error: any) {
+      notificationService.error(error.message || 'Gagal membuat pembayaran');
     } finally {
       setIsProcessing(false);
     }
@@ -115,10 +111,6 @@ export function PremiumFeatures() {
     }).format(amount);
   };
 
-  const isPremiumActive = premiumStatus.isPremium && 
-    premiumStatus.premiumUntil && 
-    new Date(premiumStatus.premiumUntil) > new Date();
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -131,79 +123,22 @@ export function PremiumFeatures() {
             Tingkatkan pengalaman dengan fitur eksklusif
           </p>
         </div>
-        {!isPremiumActive && (
-          <Button
-            icon={Crown}
-            onClick={() => setIsUpgradeModalOpen(true)}
-            className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
-          >
-            Upgrade Premium
-          </Button>
-        )}
+        <Button
+          icon={Crown}
+          onClick={() => setIsUpgradeModalOpen(true)}
+          className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+        >
+          Upgrade Premium
+        </Button>
       </div>
-
-      {/* Premium Status */}
-      {isPremiumActive ? (
-        <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-yellow-200 dark:border-yellow-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-3 bg-yellow-500 rounded-full">
-                <Crown className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-yellow-800 dark:text-yellow-300">
-                  Status Premium Aktif
-                </h3>
-                <p className="text-sm text-yellow-600 dark:text-yellow-400">
-                  Berlaku hingga: {new Date(premiumStatus.premiumUntil!).toLocaleDateString('id-ID')}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
-                {premiumStatus.subscriptionType === 'monthly' ? 'Bulanan' : 'Tahunan'}
-              </p>
-              <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                Auto-renewal aktif
-              </p>
-            </div>
-          </div>
-        </Card>
-      ) : (
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-700">
-          <div className="text-center py-6">
-            <Crown className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300 mb-2">
-              Upgrade ke Premium
-            </h3>
-            <p className="text-blue-600 dark:text-blue-400 mb-4">
-              Dapatkan akses ke semua fitur eksklusif dan tingkatkan produktivitas Anda
-            </p>
-            <Button
-              onClick={() => setIsUpgradeModalOpen(true)}
-              className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
-            >
-              Mulai Trial 7 Hari Gratis
-            </Button>
-          </div>
-        </Card>
-      )}
 
       {/* Features Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {premiumFeatures.map((feature, index) => (
-          <Card key={index} className={`${!isPremiumActive ? 'opacity-60' : ''} hover:scale-105 transition-transform`}>
+          <Card key={index} className="hover:scale-105 transition-transform">
             <div className="text-center space-y-4">
-              <div className={`p-3 rounded-full mx-auto w-fit ${
-                isPremiumActive 
-                  ? 'bg-yellow-100 dark:bg-yellow-900' 
-                  : 'bg-gray-100 dark:bg-gray-700'
-              }`}>
-                <feature.icon className={`w-6 h-6 ${
-                  isPremiumActive 
-                    ? 'text-yellow-600 dark:text-yellow-400' 
-                    : 'text-gray-400'
-                }`} />
+              <div className="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-full mx-auto w-fit">
+                <feature.icon className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -213,17 +148,10 @@ export function PremiumFeatures() {
                   {feature.description}
                 </p>
               </div>
-              {isPremiumActive ? (
-                <div className="flex items-center justify-center text-green-600 dark:text-green-400">
-                  <Check className="w-4 h-4 mr-1" />
-                  <span className="text-sm font-medium">Aktif</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center text-yellow-600 dark:text-yellow-400">
-                  <Crown className="w-4 h-4 mr-1" />
-                  <span className="text-sm font-medium">Premium</span>
-                </div>
-              )}
+              <div className="flex items-center justify-center text-yellow-600 dark:text-yellow-400">
+                <Crown className="w-4 h-4 mr-1" />
+                <span className="text-sm font-medium">Premium</span>
+              </div>
             </div>
           </Card>
         ))}

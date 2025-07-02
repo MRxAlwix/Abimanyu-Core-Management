@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Building, User, Mail, Phone, Briefcase, Users, FolderOpen, ArrowLeft, Lock, Eye, EyeOff } from 'lucide-react';
+import { Building, User, Mail, Phone, Briefcase, ArrowLeft, Lock, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { LoadingSpinner } from '../common/LoadingSpinner';
-import { registrationService } from '../../services/registrationService';
+import { authService } from '../../services/authService';
+import { notificationService } from '../../services/notificationService';
 
 const registrationSchema = z.object({
   companyName: z.string().min(2, 'Nama perusahaan minimal 2 karakter'),
@@ -14,8 +15,6 @@ const registrationSchema = z.object({
   email: z.string().email('Format email tidak valid'),
   phone: z.string().min(10, 'Nomor telepon minimal 10 digit'),
   businessType: z.string().min(1, 'Jenis usaha harus dipilih'),
-  projectCount: z.number().min(1, 'Jumlah proyek minimal 1'),
-  workerCount: z.number().min(1, 'Jumlah tukang minimal 1'),
   password: z.string().min(6, 'Password minimal 6 karakter'),
   confirmPassword: z.string().min(6, 'Konfirmasi password minimal 6 karakter'),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -57,10 +56,19 @@ export function RegistrationForm({ onBack }: RegistrationFormProps) {
     setIsSubmitting(true);
     try {
       const { confirmPassword, ...registrationData } = data;
-      await registrationService.submitRegistration(registrationData);
-      setIsSuccess(true);
+      const result = await authService.register({
+        ...registrationData,
+        username: data.email.split('@')[0],
+      });
+
+      if (result.success) {
+        setIsSuccess(true);
+        notificationService.success(result.message);
+      } else {
+        notificationService.error(result.message);
+      }
     } catch (error: any) {
-      // Error handled in service
+      notificationService.error(error.message || 'Gagal melakukan registrasi');
     } finally {
       setIsSubmitting(false);
     }
@@ -74,14 +82,14 @@ export function RegistrationForm({ onBack }: RegistrationFormProps) {
             <Building className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-            Pendaftaran Berhasil!
+            Registrasi Berhasil!
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Pendaftaran Anda telah dikirim. Tim developer akan meninjau dan mengirim konfirmasi melalui email dalam 1-2 hari kerja.
+            Akun Anda telah berhasil dibuat. Silakan cek email untuk verifikasi akun.
           </p>
           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
             <p className="text-sm text-blue-800 dark:text-blue-300">
-              <strong>Catatan:</strong> Simpan password yang Anda buat. Setelah disetujui, gunakan email dan password ini untuk login.
+              <strong>Catatan:</strong> Setelah verifikasi email, Anda dapat langsung login menggunakan email dan password yang telah dibuat.
             </p>
           </div>
           <Button onClick={onBack} className="w-full">
@@ -205,46 +213,6 @@ export function RegistrationForm({ onBack }: RegistrationFormProps) {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                <FolderOpen className="w-4 h-4 inline mr-1" />
-                Jumlah Proyek Aktif
-              </label>
-              <input
-                {...register('projectCount', { valueAsNumber: true })}
-                type="number"
-                min="1"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="5"
-              />
-              {errors.projectCount && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.projectCount.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                <Users className="w-4 h-4 inline mr-1" />
-                Jumlah Tukang
-              </label>
-              <input
-                {...register('workerCount', { valueAsNumber: true })}
-                type="number"
-                min="1"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="20"
-              />
-              {errors.workerCount && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.workerCount.message}
-                </p>
-              )}
-            </div>
-          </div>
-
           {/* Password Section */}
           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
             <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-4 flex items-center">
@@ -318,7 +286,7 @@ export function RegistrationForm({ onBack }: RegistrationFormProps) {
               <li>✓ RAB otomatis dan kalkulasi material</li>
               <li>✓ Laporan mingguan dan export data</li>
               <li>✓ AI Assistant untuk analisis bisnis</li>
-              <li>✓ Premium features selama 1 tahun</li>
+              <li>✓ Cloud backup dan sinkronisasi</li>
               <li>✓ Support prioritas 24/7</li>
             </ul>
           </div>
@@ -340,7 +308,7 @@ export function RegistrationForm({ onBack }: RegistrationFormProps) {
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <LoadingSpinner size="sm" text="Mengirim..." />
+                <LoadingSpinner size="sm" text="Mendaftar..." />
               ) : (
                 'Daftar Sekarang'
               )}

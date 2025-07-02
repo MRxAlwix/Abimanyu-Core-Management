@@ -1,106 +1,45 @@
 # Abimanyu Core Management System
 
-🚀 **AI-Powered Construction Management System** - Sistem manajemen tukang dan keuangan yang komprehensif untuk bisnis konstruksi.
+🚀 **Production-Ready Construction Management System** - Sistem manajemen tukang dan keuangan yang komprehensif untuk bisnis konstruksi dengan database real-time dan integrasi pembayaran.
 
 ## 🌟 Features
 
-### 🔐 Authentication & User Management
-- **Multi-role Authentication**: Admin, Developer, Manager
-- **Secure Registration System**: Email verification dan approval workflow
-- **Password Protection**: Encrypted password storage
-- **Session Management**: Secure token-based authentication
+### 🔐 Authentication & Security
+- **Real Database Integration**: Supabase PostgreSQL dengan Row Level Security
+- **Secure Registration**: Email verification dan password encryption
+- **JWT Authentication**: Token-based authentication dengan refresh
+- **Multi-platform Support**: Web, Desktop (Electron), Mobile (Capacitor)
 
 ### 👷 Worker Management
-- **Complete Worker Profiles**: Data lengkap tukang dengan foto dan keahlian
-- **Active/Inactive Status**: Kelola status aktif tukang
-- **Archive System**: Arsipkan data tukang yang tidak aktif
+- **Database-Backed Profiles**: Data tukang tersimpan aman di cloud
+- **Real-time Sync**: Sinkronisasi data real-time antar device
 - **Skills Tracking**: Lacak keahlian dan spesialisasi
+- **Performance Analytics**: Analisis produktivitas tukang
 
-### 💰 Payroll System
-- **Automated Calculations**: Hitung gaji otomatis berdasarkan hari kerja
-- **Overtime Integration**: Integrasi dengan sistem lembur (1.5x rate)
-- **Multiple Payment Status**: Pending, Paid, Cancelled
-- **Historical Records**: Riwayat pembayaran gaji lengkap
-
-### 💸 Cash Flow Management
-- **Income/Expense Tracking**: Lacak pemasukan dan pengeluaran
-- **Category Management**: Kategorisasi transaksi
-- **Real-time Balance**: Saldo kas real-time
-- **Financial Reports**: Laporan keuangan otomatis
-
-### ⏰ Overtime Management
-- **Flexible Hour Tracking**: Catat jam lembur dengan presisi
-- **Rate Calculation**: Kalkulasi tarif lembur otomatis
-- **Project Integration**: Hubungkan lembur dengan proyek
-- **Approval Workflow**: Sistem persetujuan lembur
-
-### 💳 Kasbon (Advance Payment) System
-- **Employee Advances**: Sistem kasbon untuk tukang
-- **Auto Deduction**: Pemotongan otomatis dari gaji
-- **Approval Process**: Workflow persetujuan kasbon
-- **Payment Tracking**: Lacak status pembayaran kasbon
+### 💰 Financial Management
+- **Automated Payroll**: Hitung gaji otomatis dengan database
+- **Real-time Cash Flow**: Monitor kas masuk/keluar real-time
+- **Premium Payments**: Integrasi Midtrans untuk pembayaran premium
+- **Financial Reports**: Laporan keuangan otomatis dan export
 
 ### 🏗️ Project Management
-- **Project Lifecycle**: Kelola proyek dari planning hingga completion
-- **Budget Tracking**: Monitor budget vs actual spending
-- **Progress Monitoring**: Lacak progress proyek real-time
-- **QR Code Integration**: Generate QR code untuk setiap proyek
+- **Cloud-Based Projects**: Proyek tersimpan aman di database
+- **QR Code Integration**: Generate QR code untuk presensi
+- **Progress Tracking**: Monitor progress real-time
+- **Budget Management**: Kelola budget vs actual spending
 
-### 📦 Material Management
-- **Inventory Tracking**: Kelola stok material
-- **Price Management**: Lacak harga material per supplier
-- **Low Stock Alerts**: Notifikasi stok menipis
-- **Cost Calculator**: Kalkulator biaya material untuk proyek
+### 📱 Multi-Platform Support
+- **Web Application**: Responsive web app
+- **Desktop App**: Electron-based desktop application
+- **Mobile App**: Capacitor-based mobile app (Android/iOS)
+- **PWA Support**: Progressive Web App capabilities
 
-### 📱 QR Code Attendance
-- **QR Code Generation**: Generate QR code untuk presensi
-- **Mobile Scanning**: Scan QR code untuk check-in/out
-- **Location Tracking**: Lacak lokasi presensi
-- **Offline Support**: Mode offline dengan sinkronisasi
-
-### 📊 RAB (Budget Estimation) Calculator
-- **Automated RAB**: Buat RAB otomatis untuk proyek
-- **Material Integration**: Integrasi dengan database material
-- **Overhead & Profit**: Kalkulasi overhead dan profit margin
-- **Export Functionality**: Export RAB ke CSV/Excel
-
-### 📈 Gantt Chart & Timeline
-- **Project Timeline**: Visualisasi timeline proyek
-- **Task Dependencies**: Kelola dependensi antar task
-- **Progress Tracking**: Monitor progress setiap task
-- **Resource Allocation**: Alokasi sumber daya
-
-### 🤖 AI Assistant Premium
-- **Business Analytics**: Analisis mendalam data bisnis
-- **Predictive Insights**: Prediksi tren dan peluang
-- **Strategic Recommendations**: Rekomendasi strategis berbasis AI
-- **Cost Optimization**: Saran optimasi biaya operasional
-- **Risk Analysis**: Analisis risiko bisnis
-- **Market Intelligence**: Insight pasar dan kompetitor
-
-### 📋 Weekly Reports
-- **Automated Reports**: Laporan mingguan otomatis
-- **Productivity Analysis**: Analisis produktivitas tukang
-- **Financial Summary**: Ringkasan keuangan mingguan
-- **Export Options**: Export laporan ke berbagai format
-
-### 🎨 Premium Features
+### 💳 Premium Features
+- **Midtrans Integration**: Pembayaran QRIS, E-wallet, Transfer Bank
 - **Unlimited Actions**: Tidak ada batasan aksi bulanan
-- **Advanced Analytics**: Analytics mendalam dan prediksi
-- **Cloud Backup**: Backup otomatis ke cloud
+- **Advanced Analytics**: AI-powered business insights
+- **Cloud Backup**: Backup otomatis ke Supabase
 - **Priority Support**: Dukungan prioritas 24/7
-- **Custom Themes**: Tema eksklusif dan kustomisasi
-- **AI Assistant**: Asisten AI untuk insight bisnis
-
-### ⚙️ System Features
-- **Dark/Light Theme**: Mode tema gelap dan terang
-- **Responsive Design**: Optimal di semua perangkat
-- **Real-time Notifications**: Notifikasi real-time
-- **Data Export**: Export data ke CSV/Excel
-- **Backup & Restore**: Sistem backup dan restore
-- **Multi-language**: Dukungan multi bahasa
-- **Sound Effects**: Efek suara untuk feedback
-- **Offline Mode**: Mode offline dengan sinkronisasi
 
 ## 🛠️ Technology Stack
 
@@ -108,241 +47,232 @@
 - **React 18** - Modern React with hooks
 - **TypeScript** - Type-safe development
 - **Tailwind CSS** - Utility-first CSS framework
-- **Lucide React** - Beautiful icons
-- **React Hook Form** - Form management
-- **Zod** - Schema validation
-- **React Hot Toast** - Notifications
+- **Vite** - Fast build tool and dev server
 
-### State Management
-- **Local Storage** - Client-side data persistence
-- **Context API** - Global state management
-- **Custom Hooks** - Reusable state logic
+### Backend & Database
+- **Supabase** - PostgreSQL database with real-time features
+- **Row Level Security** - Database-level security
+- **Real-time Subscriptions** - Live data updates
+- **Edge Functions** - Serverless functions
+
+### Authentication
+- **Supabase Auth** - Built-in authentication
+- **JWT Tokens** - Secure token-based auth
+- **Password Encryption** - bcrypt hashing
+- **Email Verification** - Secure registration flow
+
+### Payments
+- **Midtrans** - Indonesian payment gateway
+- **QRIS** - QR code payments
+- **E-wallets** - GoPay, OVO, DANA, LinkAja
+- **Bank Transfer** - All major Indonesian banks
+
+### Multi-Platform
+- **Electron** - Desktop applications
+- **Capacitor** - Mobile applications
+- **PWA** - Progressive Web App
 
 ### Security
-- **CryptoJS** - Data encryption
-- **JWT-like Tokens** - Secure authentication
+- **Row Level Security** - Database-level access control
+- **HTTPS Everywhere** - Secure connections
 - **Input Validation** - Comprehensive validation
 - **XSS Protection** - Cross-site scripting protection
 
-### Development Tools
-- **Vite** - Fast build tool
-- **ESLint** - Code linting
-- **TypeScript** - Static type checking
-- **PostCSS** - CSS processing
-
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
+- Supabase account
+- Midtrans account (for payments)
 
-### Installation
+### 1. Clone Repository
+```bash
+git clone https://github.com/abimanyu-dev/core-management.git
+cd core-management
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/abimanyu-core-management.git
-   cd abimanyu-core-management
-   ```
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### 3. Environment Setup
+```bash
+cp .env.example .env
+```
 
-3. **Start development server**
-   ```bash
-   npm run dev
-   ```
+Fill in your environment variables:
+```env
+# Supabase Configuration
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-4. **Open in browser**
-   ```
-   http://localhost:5173
-   ```
+# Midtrans Payment Gateway
+VITE_MIDTRANS_CLIENT_KEY=your_midtrans_client_key
+VITE_MIDTRANS_SERVER_KEY=your_midtrans_server_key
+VITE_MIDTRANS_IS_PRODUCTION=false
 
-### Demo Accounts
+# JWT Secret
+VITE_JWT_SECRET=your_jwt_secret_key
+```
 
-#### Admin Account
-- **Email**: `admin@abimanyu.com`
-- **Password**: `admin123`
-- **Features**: Full access to all features
+### 4. Database Setup
+Run the migration in your Supabase dashboard:
+```sql
+-- Copy and run the SQL from supabase/migrations/001_initial_schema.sql
+```
 
-#### Developer Account
-- **Email**: `developer@abimanyu.com`
-- **Password**: `dev123456`
-- **Features**: Developer dashboard + all admin features
+### 5. Start Development
+```bash
+npm run dev
+```
 
-### Registration Process
+## 📱 Multi-Platform Builds
 
-1. **Register New Company**
-   - Fill registration form with company details
-   - Create password for login
-   - Wait for developer approval
+### Desktop Application (Electron)
+```bash
+npm run build:electron
+```
 
-2. **Developer Approval**
-   - Login as developer
-   - Review registration requests
-   - Approve or reject with reason
+### Android Application
+```bash
+npm run build:android
+```
 
-3. **Login with Approved Account**
-   - Use registered email and password
-   - Access full system features
+### iOS Application
+```bash
+npm run build:ios
+```
 
-## 📱 Usage Guide
+## 🌐 Deployment
 
-### 1. Worker Management
-- Add new workers with complete profiles
-- Set daily rates and positions
-- Manage active/inactive status
-- Track skills and specializations
+### Netlify
+```bash
+# Automatic deployment with netlify.toml configuration
+git push origin main
+```
 
-### 2. Payroll Processing
-- Calculate monthly payroll automatically
-- Include overtime hours
-- Process payments and track status
-- Generate payroll reports
+### Vercel
+```bash
+# Automatic deployment with vercel.json configuration
+git push origin main
+```
 
-### 3. Cash Flow Tracking
-- Record income and expenses
-- Categorize transactions
-- Monitor cash flow balance
-- Export financial data
-
-### 4. Project Management
-- Create and manage projects
-- Set budgets and track spending
-- Monitor project progress
-- Generate project QR codes
-
-### 5. Attendance System
-- Generate QR codes for locations
-- Workers scan for check-in/out
-- Track attendance and location
-- Handle offline scenarios
-
-### 6. AI Assistant
-- Ask business questions
-- Get analytics insights
-- Receive strategic recommendations
-- Analyze performance data
+### Manual Deployment
+```bash
+npm run build
+# Upload dist/ folder to your hosting provider
+```
 
 ## 🔧 Configuration
 
+### Supabase Setup
+1. Create a new Supabase project
+2. Run the migration SQL in the SQL editor
+3. Configure Row Level Security policies
+4. Get your project URL and anon key
+
+### Midtrans Setup
+1. Create Midtrans account
+2. Get client key and server key
+3. Configure webhook endpoints
+4. Test in sandbox mode first
+
 ### Environment Variables
-Create a `.env` file in the root directory:
+All environment variables are documented in `.env.example`
 
-```env
-VITE_APP_NAME=Abimanyu Core Management
-VITE_APP_VERSION=2.1.0
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_PROJECT_ID=your_project_id
-```
+## 📊 Database Schema
 
-### Theme Configuration
-The system supports light and dark themes with automatic detection of system preferences.
-
-### Sound Settings
-Sound effects can be enabled/disabled in the settings page.
-
-## 📊 Data Structure
-
-### Local Storage Keys
-- `abimanyu_auth` - Authentication data
-- `abimanyu_users` - User accounts
-- `abimanyu_registrations` - Registration requests
-- `workers` - Worker data
+### Core Tables
+- `users` - User accounts and company information
+- `workers` - Worker/employee data
 - `transactions` - Financial transactions
-- `payrollRecords` - Payroll history
-- `overtimeRecords` - Overtime records
-- `projects` - Project data
+- `payroll_records` - Payroll calculations
+- `projects` - Project management
 - `materials` - Material inventory
-- `attendance` - Attendance records
+- `attendance_records` - Worker attendance
+- `overtime_records` - Overtime tracking
+- `premium_subscriptions` - Premium subscriptions
 
-### Data Validation
-All data inputs are validated using Zod schemas for type safety and data integrity.
+### Security
+- Row Level Security enabled on all tables
+- Policies restrict access to user's own data
+- Encrypted passwords and secure tokens
 
 ## 🔒 Security Features
 
-### Authentication
-- Encrypted password storage
-- Secure token generation
-- Session management
-- Role-based access control
+### Database Security
+- Row Level Security (RLS)
+- Encrypted connections (SSL)
+- Input validation and sanitization
+- SQL injection prevention
 
-### Data Protection
-- Input sanitization
+### Application Security
+- JWT token authentication
+- Password encryption (bcrypt)
 - XSS protection
 - CSRF protection
-- Secure local storage
+- Secure headers
 
-### Privacy
-- No external data transmission
-- Local data storage only
-- User consent for data processing
+### Data Protection
+- Real-time backup to Supabase
+- Data encryption at rest
+- Secure API endpoints
+- Privacy compliance
 
-## 🎨 UI/UX Features
+## 🎨 Design System
 
-### Design System
-- Consistent color palette
-- Typography hierarchy
-- Spacing system (8px grid)
-- Component library
+### Colors
+- Primary: Blue (#3B82F6)
+- Secondary: Purple (#8B5CF6)
+- Success: Green (#10B981)
+- Warning: Orange (#F59E0B)
+- Error: Red (#EF4444)
 
-### Animations
-- Smooth transitions
-- Hover effects
-- Loading states
-- Micro-interactions
+### Typography
+- Font: Inter (system fallback)
+- Headings: 120% line height
+- Body: 150% line height
+- Max 3 font weights
 
-### Accessibility
-- Keyboard navigation
-- Screen reader support
-- High contrast mode
-- Focus indicators
+### Spacing
+- 8px grid system
+- Consistent margins and padding
+- Responsive breakpoints
 
 ## 📈 Performance
 
 ### Optimization
-- Code splitting
-- Lazy loading
+- Code splitting with Vite
+- Lazy loading components
 - Image optimization
 - Bundle size optimization
 
 ### Caching
+- Database query caching
 - Local storage caching
-- Component memoization
-- Efficient re-renders
+- Service worker caching (PWA)
+
+### Monitoring
+- Error boundary handling
+- Performance metrics
+- User analytics
 
 ## 🧪 Testing
 
 ### Test Coverage
-- Unit tests for utilities
-- Component testing
-- Integration tests
-- E2E testing scenarios
+```bash
+npm run test
+npm run test:coverage
+npm run test:ui
+```
 
 ### Quality Assurance
 - TypeScript type checking
 - ESLint code quality
-- Performance monitoring
-- Error boundary handling
-
-## 🚀 Deployment
-
-### Build for Production
-```bash
-npm run build
-```
-
-### Preview Production Build
-```bash
-npm run preview
-```
-
-### Deployment Options
-- Netlify (recommended)
-- Vercel
-- GitHub Pages
-- Self-hosted
+- Automated testing
+- Manual QA testing
 
 ## 🤝 Contributing
 
@@ -368,7 +298,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Documentation
 - [User Guide](docs/user-guide.md)
 - [API Reference](docs/api-reference.md)
-- [Troubleshooting](docs/troubleshooting.md)
+- [Deployment Guide](docs/deployment.md)
 
 ### Contact
 - **Email**: support@abimanyu.com
@@ -377,28 +307,39 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🎯 Roadmap
 
-### Version 2.2.0
-- [ ] Mobile app (React Native)
+### Version 2.3.0
 - [ ] Real-time collaboration
-- [ ] Advanced reporting
+- [ ] Advanced AI analytics
+- [ ] Multi-company support
 - [ ] API integrations
 
-### Version 2.3.0
-- [ ] Multi-company support
-- [ ] Advanced AI features
+### Version 2.4.0
+- [ ] Inventory management
+- [ ] Equipment tracking
+- [ ] Advanced reporting
 - [ ] Custom workflows
-- [ ] Third-party integrations
 
 ## 🏆 Acknowledgments
 
-- **React Team** - For the amazing React framework
+- **Supabase** - For the amazing backend-as-a-service
+- **Midtrans** - For secure payment processing
+- **React Team** - For the React framework
 - **Tailwind CSS** - For the utility-first CSS framework
-- **Lucide** - For the beautiful icon library
 - **Vite** - For the fast build tool
-- **TypeScript** - For type safety
 
 ---
 
 **Made with ❤️ by Abimanyu Team**
 
-*Empowering construction businesses with intelligent management solutions.*
+*Empowering construction businesses with intelligent, secure, and scalable management solutions.*
+
+## 🔐 Security Notice
+
+This application implements enterprise-grade security measures:
+- All data is encrypted in transit and at rest
+- Database access is protected by Row Level Security
+- Authentication uses industry-standard JWT tokens
+- Payment processing is PCI DSS compliant through Midtrans
+- Regular security audits and updates
+
+For security concerns, please contact: security@abimanyu.com
